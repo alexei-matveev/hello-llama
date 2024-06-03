@@ -12,17 +12,6 @@ Older CPUs supporting only AVX will get SIGILL:
     $ ./build/bin/main -h
     Illegal instruction (core dumped)
 
-#### Models
-
-    $ mkdir models
-    $ cd models
-    $ curl -LO https://huggingface.co/ggml-org/models/resolve/main/tinyllamas/stories15M-q4_0.gguf
-    $ curl -LO https://huggingface.co/ggml-org/models/resolve/main/phi-2/ggml-model-q4_0.gguf
-
-    $ md5sum *
-    3a77700850d8cf2b502d2d4a83078f55  ggml-model-q4_0.gguf
-    abb77e873442615657e3379baeb50567  stories15M-q4_0.gguf
-
 #### Build from Sources
 
     $ git clone --depth 100 https://github.com/ggerganov/llama.cpp.git
@@ -39,7 +28,18 @@ Older CPUs supporting only AVX will get SIGILL:
 
     $ ./main -h
 
-Run models:
+#### Get Models
+
+    $ mkdir models
+    $ cd models
+    $ curl -LO https://huggingface.co/ggml-org/models/resolve/main/tinyllamas/stories15M-q4_0.gguf
+    $ curl -LO https://huggingface.co/ggml-org/models/resolve/main/phi-2/ggml-model-q4_0.gguf
+
+    $ md5sum *
+    3a77700850d8cf2b502d2d4a83078f55  ggml-model-q4_0.gguf
+    abb77e873442615657e3379baeb50567  stories15M-q4_0.gguf
+
+#### Run Models
 
     ./llama.cpp/main -m models/stories15M-q4_0.gguf --prompt "Once upon a time"
     ./llama.cpp/main -m models/ggml-model-q4_0.gguf --prompt "Once upon a time"
