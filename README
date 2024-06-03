@@ -11,6 +11,11 @@ unzip llama-b3075-bin-ubuntu-x64.zip
 
 cd models
 curl -LO https://huggingface.co/ggml-org/models/resolve/main/tinyllamas/stories15M-q4_0.gguf
+curl -LO https://huggingface.co/ggml-org/models/resolve/main/phi-2/ggml-model-q4_0.gguf
+
+$ md5sum *
+3a77700850d8cf2b502d2d4a83078f55  ggml-model-q4_0.gguf
+abb77e873442615657e3379baeb50567  stories15M-q4_0.gguf
 
 #### Build from Sources
 
@@ -28,6 +33,7 @@ built with cc (Ubuntu 13.2.0-23ubuntu4) 13.2.0 for x86_64-linux-gnu
 
 $ ./main -h
 
-Rund the model:
+Run models:
 
 ./llama.cpp/main -m models/stories15M-q4_0.gguf --prompt "Once upon a time"
+./llama.cpp/main -m models/ggml-model-q4_0.gguf --prompt "Once upon a time"
