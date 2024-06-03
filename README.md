@@ -1,12 +1,16 @@
-#### Binary Releases
+#### Experiments with `llama.cpp`
 
 See
 https://github.com/ggerganov/llama.cpp/blob/master/examples/main/README.md
 
-No Luck with older CPUs supportin only AVX:
+#### No Binary Releases for old CPUs
+
+Older CPUs supporting only AVX will get SIGILL:
 
     $ curl -LO https://github.com/ggerganov/llama.cpp/releases/download/b3075/llama-b3075-bin-ubuntu-x64.zip
     $ unzip llama-b3075-bin-ubuntu-x64.zip
+    $ ./build/bin/main -h
+    Illegal instruction (core dumped)
 
 #### Models
 
