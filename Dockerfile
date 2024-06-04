@@ -17,8 +17,12 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# Where do we get the sources from? We assume the sources are in
-# ./llama.cpp.
+# How do  we get  the sources  and supply  them to  Buildah/Docker? We
+# assume the  sources are  in ./llama.cpp  as if  one cloned  the repo
+# locally.   This  might  be  the  best  workflow  for  iterations  in
+# development. Then  a simple  COPY would suffice,  see .dockerignore!
+# FWIW, GitHub does not allow  "git archive --remote=..." but provides
+# an alternative vor tarballs.
 #
 # COPY . .
 RUN mkdir llama.cpp && \
