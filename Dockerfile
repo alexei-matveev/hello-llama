@@ -3,7 +3,14 @@
 #
 #     $ buildah bud --layers -t llama-cpp .
 #     $ buildah images
-#     $ podman run localhost/llama-cpp -h
+#     $ podman run --rm localhost/llama-cpp -h
+#
+# With populated models/ run the server:
+#
+#     $ podman run --rm -p 8080:8080 -v $PWD/models:/models localhost/llama-cpp -m models/ggml-model-q4_0.gguf -c 2048 --host 0.0.0.0
+#
+# Default  --host 127.0.0.1  ist  not sufficient  for  serving from  a
+# container.
 #
 # See original Dockerfiles [1].  Für LLAMA versions see release tags
 # [2].
@@ -32,7 +39,7 @@ WORKDIR /app
 # COPY . .
 RUN mkdir llama.cpp && \
     curl -sL https://github.com/ggerganov/llama.cpp/tarball/$LLAMA_RELEASE | tar zxf - -C llama.cpp/ --strip-components=1
-RUN make -C llama.cpp -j$(nproc) server main
+RUN make -C llama.cpp -j$(nproc) server # main
 
 FROM ubuntu:$UBUNTU_VERSION as runtime
 
@@ -42,9 +49,9 @@ RUN apt-get update && \
     apt-get install libgomp1
 
 # Does it work with --layers?
-COPY --from=build /app/llama.cpp/main /main
+# COPY --from=build /app/llama.cpp/main /main
 COPY --from=build /app/llama.cpp/server /server
 
 ENV LC_ALL=C.utf8
 
-ENTRYPOINT [ "/main" ]
+ENTRYPOINT [ "/server" ]
