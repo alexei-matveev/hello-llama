@@ -43,3 +43,11 @@ Older CPUs supporting only AVX will get SIGILL:
 
     ./llama.cpp/main -m models/stories15M-q4_0.gguf --prompt "Once upon a time"
     ./llama.cpp/main -m models/ggml-model-q4_0.gguf --prompt "Once upon a time"
+
+#### Run Server
+
+    $ ./llama.cpp/server -m models/ggml-model-q4_0.gguf -c 2048
+
+    $ curl --request POST --url http://localhost:8080/completion \
+           --header "Content-Type: application/json" \
+           --data '{"prompt": "Building a website can be done in 10 simple steps:","n_predict": 128}'
