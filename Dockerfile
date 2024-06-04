@@ -10,11 +10,14 @@ WORKDIR /app
 
 COPY . .
 
-RUN make -j$(nproc)
+# Where do we get the sources from? Here ist is assumed the sources
+# are in ./llama.cpp:
+RUN make -C llama.cpp -j$(nproc) server main
 
 FROM ubuntu:$UBUNTU_VERSION as runtime
 
-COPY --from=build /app/main /main
+COPY --from=build /app/llama.cpp/main /main
+COPY --from=build /app/llama.cpp/server /server
 
 ENV LC_ALL=C.utf8
 
