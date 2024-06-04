@@ -5,12 +5,17 @@
 #     $ buildah images
 #     $ podman run localhost/llama-cpp -h
 #
-# See original Dockerfiles [1].
+# See original Dockerfiles [1].  Für LLAMA versions see release tags
+# [2].
 #
 # [1] https://raw.githubusercontent.com/ggerganov/llama.cpp/master/.devops/main.Dockerfile
+# [2] https://github.com/ggerganov/llama.cpp/releases
 ARG UBUNTU_VERSION=22.04
+ARG LLAMA_RELEASE=b3078
+
 
 FROM ubuntu:$UBUNTU_VERSION as build
+ARG LLAMA_RELEASE
 
 RUN apt-get update && \
     apt-get install -y build-essential git curl
@@ -26,8 +31,7 @@ WORKDIR /app
 #
 # COPY . .
 RUN mkdir llama.cpp && \
-    curl -sL https://github.com/ggerganov/llama.cpp/tarball/b3078 | tar zxf - -C llama.cpp/ --strip-components=1
-# WRONG: git archive --remote=https://notwithgithub --prefix=llama.cpp/ b3078 --format=tgz | tar ztf -
+    curl -sL https://github.com/ggerganov/llama.cpp/tarball/$LLAMA_RELEASE | tar zxf - -C llama.cpp/ --strip-components=1
 RUN make -C llama.cpp -j$(nproc) server main
 
 FROM ubuntu:$UBUNTU_VERSION as runtime
@@ -37,6 +41,7 @@ FROM ubuntu:$UBUNTU_VERSION as runtime
 RUN apt-get update && \
     apt-get install libgomp1
 
+# Does it work with --layers?
 COPY --from=build /app/llama.cpp/main /main
 COPY --from=build /app/llama.cpp/server /server
 
