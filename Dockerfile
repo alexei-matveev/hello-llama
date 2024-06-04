@@ -13,14 +13,17 @@ ARG UBUNTU_VERSION=22.04
 FROM ubuntu:$UBUNTU_VERSION as build
 
 RUN apt-get update && \
-    apt-get install -y build-essential git
+    apt-get install -y build-essential git curl
 
 WORKDIR /app
 
-COPY . .
-
 # Where do we get the sources from? We assume the sources are in
-# ./llama.cpp:
+# ./llama.cpp.
+#
+# COPY . .
+RUN mkdir llama.cpp && \
+    curl -sL https://github.com/ggerganov/llama.cpp/tarball/b3078 | tar zxf - -C llama.cpp/ --strip-components=1
+# WRONG: git archive --remote=https://notwithgithub --prefix=llama.cpp/ b3078 --format=tgz | tar ztf -
 RUN make -C llama.cpp -j$(nproc) server main
 
 FROM ubuntu:$UBUNTU_VERSION as runtime
