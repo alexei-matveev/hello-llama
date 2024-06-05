@@ -17,11 +17,11 @@
 #
 # [1] https://raw.githubusercontent.com/ggerganov/llama.cpp/master/.devops/main.Dockerfile
 # [2] https://github.com/ggerganov/llama.cpp/releases
-# ARG UBUNTU_VERSION=22.04
+ARG BASE_IMAGE=registry.access.redhat.com/ubi8:8.10
+#RG BASE_IMAGE=ubuntu:22.04
 ARG LLAMA_RELEASE=b3078
 
-# FROM ubuntu:$UBUNTU_VERSION as build
-FROM registry.access.redhat.com/ubi8:8.10 as build
+FROM $BASE_IMAGE as build
 ARG LLAMA_RELEASE
 
 # RUN apt-get update && apt-get install -y build-essential curl # git?
@@ -44,7 +44,7 @@ RUN mkdir llama.cpp && \
 RUN make -C llama.cpp -j$(nproc) server # main
 
 # FROM ubuntu:$UBUNTU_VERSION as runtime
-FROM registry.access.redhat.com/ubi8:8.10 as runtime
+FROM $BASE_IMAGE as runtime
 
 # /main: error while loading shared libraries: libgomp.so.1: cannot
 # open shared object file: No such file or directory
