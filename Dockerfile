@@ -6,7 +6,11 @@
 #     $ podman run --rm --entrypoint /main   localhost/llama-cpp -h
 #     $ podman run --rm --entrypoint /server localhost/llama-cpp -h
 #
-# With populated models/ run the server:
+# With populated models/ run inference:
+#
+#     $ podman run --rm -v $PWD/models:/models --entrypoint /main localhost/llama-cpp -m models/ggml-model-q4_0.gguf --prompt "Once upon a time"
+#
+# or the API server:
 #
 #     $ podman run --rm -p 8080:8080 -v $PWD/models:/models localhost/llama-cpp -m models/ggml-model-q4_0.gguf -c 2048 --host 0.0.0.0
 #
