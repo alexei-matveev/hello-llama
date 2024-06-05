@@ -34,15 +34,18 @@ Older CPUs supporting only AVX will get SIGILL:
     $ cd models
     $ curl -LO https://huggingface.co/ggml-org/models/resolve/main/tinyllamas/stories15M-q4_0.gguf
     $ curl -LO https://huggingface.co/ggml-org/models/resolve/main/phi-2/ggml-model-q4_0.gguf
+    $ curl -LO https://huggingface.co/TheBloke/Mistral-7B-v0.1-GGUF/resolve/main/mistral-7b-v0.1.Q4_K_M.gguf
 
     $ md5sum *
     3a77700850d8cf2b502d2d4a83078f55  ggml-model-q4_0.gguf
+    a5b363017e471c713665d57433f76e65  mistral-7b-v0.1.Q4_K_M.gguf
     abb77e873442615657e3379baeb50567  stories15M-q4_0.gguf
 
 #### Run Models
 
     ./llama.cpp/main -m models/stories15M-q4_0.gguf --prompt "Once upon a time"
     ./llama.cpp/main -m models/ggml-model-q4_0.gguf --prompt "Once upon a time"
+    ./llama.cpp/main -m models/mistral-7b-v0.1.Q4_K_M.gguf --prompt "Once upon a time"
 
 #### Run Server
 
