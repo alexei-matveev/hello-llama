@@ -1,7 +1,13 @@
-# https://github.com/ggerganov/llama.cpp/blob/master/grammars/README.md
+# Usage:
+#
+#     ./llama.cpp/main -m models/ggml-model-q4_0.gguf --grammar-file grammars/phrases.gbnf -n 32 --prompt "Garbage in, garbage out!"
+#
+# For the syntax of the grammar files see [1].
+#
+# [1] https://github.com/ggerganov/llama.cpp/blob/master/grammars/README.md
 
 # Root non-terminal is special:
-root ::= ("\nThis text is about " term ".\n")+
+root ::= ("\nThis text is about " term (" and " term)+ ".\n")+
 
 # term ::= "math" | "science" | "history"
 
