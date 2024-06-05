@@ -1,0 +1,2 @@
+root  ::= ("\nThis text is about " term "\n")+
+term  ::= "math" | "science" | "history"
