@@ -11,10 +11,13 @@
 #
 # Default  --host 127.0.0.1  ist  not sufficient  for  serving from  a
 # container.  See  original Dockerfiles  [1].  Für LLAMA  versions see
-# release tags [2].
+# release tags [2]. Red Hat Catalog does not like direkt links, you'll
+# need to search for "universal base image" for updates [3].
 #
 # [1] https://raw.githubusercontent.com/ggerganov/llama.cpp/master/.devops/main.Dockerfile
 # [2] https://github.com/ggerganov/llama.cpp/releases
+# [3] https://catalog.redhat.com/search?searchType=containers
+
 ARG BASE_IMAGE=registry.access.redhat.com/ubi8:8.10
 #RG BASE_IMAGE=ubuntu:22.04
 ARG LLAMA_RELEASE=b3078
