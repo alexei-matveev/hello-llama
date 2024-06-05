@@ -10,10 +10,8 @@
 #     $ podman run --rm -p 8080:8080 -v $PWD/models:/models localhost/llama-cpp -m models/ggml-model-q4_0.gguf -c 2048 --host 0.0.0.0
 #
 # Default  --host 127.0.0.1  ist  not sufficient  for  serving from  a
-# container.
-#
-# See original Dockerfiles [1].  Für LLAMA versions see release tags
-# [2].
+# container.  See  original Dockerfiles  [1].  Für LLAMA  versions see
+# release tags [2].
 #
 # [1] https://raw.githubusercontent.com/ggerganov/llama.cpp/master/.devops/main.Dockerfile
 # [2] https://github.com/ggerganov/llama.cpp/releases
@@ -24,7 +22,7 @@ ARG LLAMA_RELEASE=b3078
 FROM $BASE_IMAGE as build
 ARG LLAMA_RELEASE
 
-# RUN apt-get update && apt-get install -y build-essential curl # git?
+#UN apt-get update && apt-get install -y build-essential curl # git?
 RUN dnf install -y gcc gcc-c++ make diffutils # git?
 
 WORKDIR /app
@@ -43,7 +41,6 @@ RUN mkdir llama.cpp && \
     curl -sL https://github.com/ggerganov/llama.cpp/tarball/$LLAMA_RELEASE | tar zxf - -C llama.cpp/ --strip-components=1
 RUN make -C llama.cpp -j$(nproc) server # main
 
-# FROM ubuntu:$UBUNTU_VERSION as runtime
 FROM $BASE_IMAGE as runtime
 
 # /main: error while loading shared libraries: libgomp.so.1: cannot
