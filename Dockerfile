@@ -3,7 +3,8 @@
 #
 #     $ buildah bud --layers -t llama-cpp .
 #     $ buildah images
-#     $ podman run --rm localhost/llama-cpp -h
+#     $ podman run --rm --entrypoint /main   localhost/llama-cpp -h
+#     $ podman run --rm --entrypoint /server localhost/llama-cpp -h
 #
 # With populated models/ run the server:
 #
@@ -42,7 +43,7 @@ WORKDIR /app
 # COPY . .
 RUN mkdir llama.cpp && \
     curl -sL https://github.com/ggerganov/llama.cpp/tarball/$LLAMA_RELEASE | tar zxf - -C llama.cpp/ --strip-components=1
-RUN make -C llama.cpp -j$(nproc) server # main
+RUN make -C llama.cpp -j$(nproc) server main
 
 FROM $BASE_IMAGE as runtime
 
@@ -52,7 +53,7 @@ FROM $BASE_IMAGE as runtime
 RUN dnf install -y libgomp
 
 # Does it work with --layers?
-# COPY --from=build /app/llama.cpp/main /main
+COPY --from=build /app/llama.cpp/main /main
 COPY --from=build /app/llama.cpp/server /server
 
 ENV LC_ALL=C.utf8
