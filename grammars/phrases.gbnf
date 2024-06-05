@@ -1,2 +1,13 @@
-root  ::= ("\nThis text is about " term "\n")+
-term  ::= "math" | "science" | "history"
+# https://github.com/ggerganov/llama.cpp/blob/master/grammars/README.md
+
+# Root non-terminal is special:
+root ::= ("\nThis text is about " term ".\n")+
+
+# term ::= "math" | "science" | "history"
+
+# Let it improvise:
+term ::= ("the " | "a ") word
+word ::= [a-z]+
+
+
+
