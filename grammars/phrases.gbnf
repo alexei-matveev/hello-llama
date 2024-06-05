@@ -9,11 +9,11 @@
 # Root non-terminal is special:
 root ::= ("\nThis text is about " term (" and " term)+ ".\n")+
 
-# term ::= "math" | "science" | "history"
+term ::= "math" | "chemistry" | "science" | "history" | "fiction" | "movie"
 
 # Let it improvise:
-term ::= ("the " | "a ") word
-word ::= [a-z]+
+# term ::= ("the " | "a ") word
+# word ::= [a-z]+
 
 
 
