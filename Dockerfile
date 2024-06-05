@@ -18,7 +18,7 @@
 # [2] https://github.com/ggerganov/llama.cpp/releases
 # [3] https://catalog.redhat.com/search?searchType=containers
 
-ARG BASE_IMAGE=registry.access.redhat.com/ubi8:8.10
+ARG BASE_IMAGE=registry.access.redhat.com/ubi9:9.4 # ubi8:8.10
 #RG BASE_IMAGE=ubuntu:22.04
 ARG LLAMA_RELEASE=b3078
 
