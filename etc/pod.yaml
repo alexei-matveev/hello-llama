@@ -1,0 +1,31 @@
+#
+# Usage:
+#
+#     $ podman pod ls
+#     $ podman kube play etc/pod.yaml
+#     $ podman pod logs -f llama-cpp
+#     $ podman pod stop llama-cpp
+#     $ podman pod rm llama-cpp
+#
+# Not sure if this "podman kube play" makes sense at all ...
+#
+# [1] https://docs.podman.io/en/latest/markdown/podman-kube-play.1.html
+# [2] https://rinoymjoseph.github.io/podman-play-kube-how-to-use-volumes-for-data-persistence/
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "llama-cpp"
+spec:
+  containers:
+  - name: "server"
+    image: "localhost/llama-cpp"
+    command: ["/server"]
+    args: ["-m", "models/mistral-7b-v0.1.Q4_K_M.gguf", "-c", "2048"]
+    volumeMounts:
+    - mountPath: "/models/"
+      name: "models"
+  volumes:
+  - name: "models"
+    hostPath:
+      path: "./models/"
+      type: "Directory"
