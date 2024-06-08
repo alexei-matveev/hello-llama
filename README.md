@@ -3,6 +3,14 @@
 See
 https://github.com/ggerganov/llama.cpp/blob/master/examples/main/README.md
 
+#### Build Docker Image
+
+TBD, see comments in Dockerfile
+
+#### Rund `llama.cpp` Server from Docker Image
+
+TBD, see bin/start
+
 #### No Binary Releases for old CPUs
 
 Older CPUs supporting only AVX will get SIGILL:
