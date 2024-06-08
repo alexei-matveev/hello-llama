@@ -1,3 +1,4 @@
 3a77700850d8cf2b502d2d4a83078f55  ggml-model-q4_0.gguf
 a5b363017e471c713665d57433f76e65  mistral-7b-v0.1.Q4_K_M.gguf
 abb77e873442615657e3379baeb50567  stories15M-q4_0.gguf
+6d3c37571b6383a2c520354225687c12  amethyst-13b-mistral.Q4_K_M.gguf

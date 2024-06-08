@@ -10,9 +10,13 @@ fi
 #   19M     stories15M-q4_0.gguf
 #   1.5G    ggml-model-q4_0.gguf
 #   4.1G    mistral-7b-v0.1.Q4_K_M.gguf
+#   7.4G    amethyst-13b-mistral.Q4_K_M.gguf
 
 url=https://huggingface.co/ggml-org/models/resolve/main/tinyllamas/stories15M-q4_0.gguf
 #rl=https://huggingface.co/ggml-org/models/resolve/main/phi-2/ggml-model-q4_0.gguf
+#rl=https://huggingface.co/TheBloke/Mistral-7B-v0.1-GGUF/resolve/main/mistral-7b-v0.1.Q4_K_M.gguf
+
+# This will need ~9G RAM and will be really slow on CPU:
 #rl=https://huggingface.co/TheBloke/Amethyst-13B-Mistral-GGUF/resolve/main/amethyst-13b-mistral.Q4_K_M.gguf
 
 model=$(basename $url)
