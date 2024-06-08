@@ -11,6 +11,23 @@ TBD, see comments in Dockerfile
 
 TBD, see bin/start
 
+#### Using Server OpenAI API
+
+See [Repo](https://github.com/openai/openai-python) ...
+
+    $ python3 -m venv .venv
+	$ . .venv/bin/activate
+	$ pip install openai
+
+Venv with OpenAI Client API only take about ~34M ob Ubuntu 24.04. Run
+example session using OpenAI API by executing
+
+    $ bin/chat
+
+When finished deactivate Venv with:
+
+	$ deactivate
+
 #### No Binary Releases for old CPUs
 
 Older CPUs supporting only AVX will get SIGILL:
