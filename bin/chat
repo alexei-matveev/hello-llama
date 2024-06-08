@@ -18,6 +18,8 @@ questions = [
     "Is he dangerous?",
     "Who wrote it all?",
     "When was he born?",
+    "Is he alive?",
+    "Was ist EPA?"
 ]
 
 messages = [{ "role": "system", "content": prompt}]
