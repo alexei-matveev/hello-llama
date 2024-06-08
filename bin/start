@@ -32,5 +32,7 @@ podman run --rm \
        -v $PWD/models:/models \
        localhost/llama-cpp \
        -m models/$model \
+       --host 0.0.0.0 \
+       --metrics \
        -c 2048 \
-       --host 0.0.0.0
+       $*
