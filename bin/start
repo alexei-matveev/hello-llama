@@ -1,0 +1,22 @@
+#!/bin/bash -x
+
+if [ ! -d models/ ]; then
+    echo 'No models/ here!'
+    exit 1
+fi
+
+url=https://huggingface.co/TheBloke/Mistral-7B-v0.1-GGUF/resolve/main/mistral-7b-v0.1.Q4_K_M.gguf
+model=$(basename $url)
+
+if [ ! -f models/$model ]; then
+    echo "Run curl -LO $url in ./models, and try again"
+    exit 1
+fi
+
+podman run --rm \
+       -p 8080:8080 \
+       -v $PWD/models:/models \
+       localhost/llama-cpp \
+       -m models/$model \
+       -c 2048 \
+       --host 0.0.0.0
