@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+
+import os
+import json
+from openai import OpenAI
+
+# Default is vor api_key ist OPENAI_API_KEY env var:
+client = OpenAI(
+    base_url="http://localhost:8080/v1",
+    api_key="usually-not-required",
+)
+
+# Works as intended with Phi-3-mini-4k-instruct-q4.gguf ...
+prompt = "Reply with a short sentence or just a few words. No notes!"
+
+questions = [
+    "Who is James Bond?",
+    "Is he dangerous?",
+    "Who wrote it all?",
+    "When was he born?",
+]
+
+messages = [{ "role": "system", "content": prompt}]
+print (prompt)
+for q in questions:
+    print ("Q: ", q)
+    messages = messages + [ {"role": "user", "content": q}]
+    completion = client.chat.completions.create(
+        messages=messages,
+        # Probably ignored:
+        model="gpt-3.5-turbo")
+
+    # Phi-3 replies end with "<|end|>" token that is not stripped of
+    # on parsing of completions. Is it a problem if we pass the token
+    # back unchanged?
+    messages = messages + [c.message for c in completion.choices]
+
+    # print (completion.to_json())
+    for c in completion.choices:
+        print ("A: ", c.message.content)
+
