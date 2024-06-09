@@ -5,7 +5,7 @@ https://github.com/ggerganov/llama.cpp/blob/master/examples/main/README.md
 
 #### Build Docker Image
 
-This seems to work at least on Ubruntu 24.04 and Debian 12, even vor
+This seems to work at least on Ubuntu 24.04 and Debian 12, even for
 non-priviliged users:
 
     $ buildah bud --layers --force-rm -t llama-cpp .
@@ -15,13 +15,13 @@ non-priviliged users:
     <none>                            <none>   482b54a890b8   3 minutes ago   490 MB
     registry.access.redhat.com/ubi8   8.10     7b13db19b1f3   4 days ago      212 MB
 
-The intermedieate Image may be removed witih `buildah rmi`. Try
-starting executables with Podman:
+The intermediate image without tags may be removed with `buildah
+rmi`. Try starting executables with Podman:
 
     $ podman run --rm --entrypoint /main   localhost/llama-cpp -h
     $ podman run --rm --entrypoint /server localhost/llama-cpp -h
 
-See also the comments in the Dockerfile.
+See also comments in the Dockerfile.
 
 #### Rund `llama.cpp` Server from Docker Image
 
