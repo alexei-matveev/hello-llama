@@ -4,7 +4,8 @@ import os
 import json
 from openai import OpenAI
 
-# Default is vor api_key ist OPENAI_API_KEY env var:
+# Default api_key is to take it from OPENAI_API_KEY environment
+# variable:
 client = OpenAI(
     base_url="http://backup:8080/v1",
     api_key="usually-not-required",
@@ -15,9 +16,40 @@ client = OpenAI(
 def trim_content (text: str) -> str:
     return text.strip().removesuffix("<|end|>")
 
-# Works as intended with Phi-3-mini-4k-instruct-q4.gguf ...
+def session (client, prompt: str, questions: list[str]) -> None:
+    messages = [{ "role": "system", "content": prompt}]
+    print (prompt)
+    for q in questions:
+        print ("Q: ", q)
+        messages = messages + [ {"role": "user", "content": q}]
+        completion = client.chat.completions.create(
+            messages=messages,
+            # Probably ignored:
+            model="gpt-3.5-turbo")
+
+        # Phi-3 replies end with "<|end|>" token that is not stripped off
+        # on parsing of completions. Is it a problem if we pass the token
+        # back unchanged? It might be, as the models seems to occasionally
+        # engage in discussion with itself.  Also we seem to be putting
+        # Dict and isomorfic ChatCompletionMessage into the same list
+        # here.
+        messages = messages + \
+            [{"role": c.message.role,
+              "content": trim_content(c.message.content)}
+             for c in completion.choices]
+
+        # print (completion.to_json())
+        for c in completion.choices:
+            print ("A: ", trim_content(c.message.content))
+
+# This esample session works mostly as intended with
+# Phi-3-mini-4k-instruct-q4.gguf model. It starts to break apart when
+# switching to other languages.  Even German is not always perfect.
+# Sometimes the model translates all of the chat history to german
+# instead of replying to the one question it was asked. One probably
+# schould not mix languages in one session.
 prompt = """
-    Reply with a short sentence or just a few words.
+    Reply with a short sentence or just a few words. No notes!
     Bitte die Antworten kurz fassen!
     Будь кратким!
 """
@@ -28,33 +60,10 @@ questions = [
     "Who wrote it all?",
     "When was he born?",
     "Is he alive?",
-    # "Wer ist James Bond?",
-    # "Кто такой Джеймс Бонд?",
-    # "Were did we stop?"
+    "Wer ist James Bond?",
+    "Кто такой Джеймс Бонд?",
+    "Were did we stop?"
 ]
 
-messages = [{ "role": "system", "content": prompt}]
-print (prompt)
-for q in questions:
-    print ("Q: ", q)
-    messages = messages + [ {"role": "user", "content": q}]
-    completion = client.chat.completions.create(
-        messages=messages,
-        # Probably ignored:
-        model="gpt-3.5-turbo")
-
-    # Phi-3 replies end with "<|end|>" token that is not stripped off
-    # on parsing of completions. Is it a problem if we pass the token
-    # back unchanged? It might be, as the models seems to occasionally
-    # engage in discussion with itself.  Also we seem to be putting
-    # Dict and isomorfic ChatCompletionMessage into the same list
-    # here.
-    messages = messages + \
-        [{"role": c.message.role,
-          "content": trim_content(c.message.content)}
-         for c in completion.choices]
-
-    # print (completion.to_json())
-    for c in completion.choices:
-        print ("A: ", trim_content(c.message.content))
-
+# Run this particular session
+session (client, prompt, questions)
