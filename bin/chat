@@ -11,7 +11,11 @@ client = OpenAI(
 )
 
 # Works as intended with Phi-3-mini-4k-instruct-q4.gguf ...
-prompt = "Reply with a short sentence or just a few words. No notes!"
+prompt = """
+    Reply with a short sentence or just a few words.
+    Bitte die Antworten kurz fassen!
+    Будь кратким!
+"""
 
 questions = [
     "Who is James Bond?",
@@ -19,7 +23,9 @@ questions = [
     "Who wrote it all?",
     "When was he born?",
     "Is he alive?",
-    "Was ist EPA?"
+    # "Wer ist James Bond?",
+    # "Кто такой Джеймс Бонд?",
+    # "Were did we stop?"
 ]
 
 messages = [{ "role": "system", "content": prompt}]
@@ -32,9 +38,12 @@ for q in questions:
         # Probably ignored:
         model="gpt-3.5-turbo")
 
-    # Phi-3 replies end with "<|end|>" token that is not stripped of
+    # Phi-3 replies end with "<|end|>" token that is not stripped off
     # on parsing of completions. Is it a problem if we pass the token
-    # back unchanged?
+    # back unchanged? It might be, as the models seems to occasionally
+    # engage in discussion with itself.  Also we seem to be putting
+    # Dict and isomorfic ChatCompletionMessage into the same list
+    # here.
     messages = messages + [c.message for c in completion.choices]
 
     # print (completion.to_json())
