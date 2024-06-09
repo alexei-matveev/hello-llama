@@ -6,9 +6,14 @@ from openai import OpenAI
 
 # Default is vor api_key ist OPENAI_API_KEY env var:
 client = OpenAI(
-    base_url="http://localhost:8080/v1",
+    base_url="http://backup:8080/v1",
     api_key="usually-not-required",
 )
+
+# Phi-3 uses these tokens that appear to leak through the API. Also
+# whitespace in front of the completion is irritating in regular case.
+def trim_content (text: str) -> str:
+    return text.strip().removesuffix("<|end|>")
 
 # Works as intended with Phi-3-mini-4k-instruct-q4.gguf ...
 prompt = """
@@ -44,9 +49,12 @@ for q in questions:
     # engage in discussion with itself.  Also we seem to be putting
     # Dict and isomorfic ChatCompletionMessage into the same list
     # here.
-    messages = messages + [c.message for c in completion.choices]
+    messages = messages + \
+        [{"role": c.message.role,
+          "content": trim_content(c.message.content)}
+         for c in completion.choices]
 
     # print (completion.to_json())
     for c in completion.choices:
-        print ("A: ", c.message.content)
+        print ("A: ", trim_content(c.message.content))
 
