@@ -1,7 +1,10 @@
 #### Experiments with `llama.cpp`
 
-See
-https://github.com/ggerganov/llama.cpp/blob/master/examples/main/README.md
+See original
+[README](https://github.com/ggerganov/llama.cpp/blob/master/examples/main/README.md),
+also for the
+[server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md)
+mode.
 
 #### Build Docker Image
 
