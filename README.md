@@ -34,6 +34,10 @@ the internet. That beeing said, just execute the startup script:
 Note that on first start it will download a model file over your
 link. Those are a few GB big!
 
+Then point your Browser to the [Frontend](http://localhost:8080).
+However the whole point of the server ist to be used over API, see
+[Example](./bin/chat).
+
 #### Using Server OpenAI API
 
 See [Repo](https://github.com/openai/openai-python) ...
