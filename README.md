@@ -25,7 +25,14 @@ See also comments in the Dockerfile.
 
 #### Rund `llama.cpp` Server from Docker Image
 
-TBD, see bin/start
+WARNING, as is the server exposes port 8080 on 0.0.0.0 which will be
+available in local network or, in worst case of a public IP, to all of
+the internet. That beeing said, just execute the startup script:
+
+    $ bin/start
+
+Note that on first start it will download a model file over your
+link. Those are a few GB big!
 
 #### Using Server OpenAI API
 
