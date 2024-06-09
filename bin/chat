@@ -8,7 +8,7 @@ schould not mix languages in one session.
 """
 
 # import os
-# import json
+from json import dumps
 from openai import OpenAI
 
 # Phi-3 uses tokens <|end|> to signal the end of the completion that
@@ -19,7 +19,7 @@ from openai import OpenAI
 def trim_content (text: str) -> str:
     return text.strip().removesuffix("<|end|>")
 
-def session (client: OpenAI, prompt: str, questions: list[str]) -> None:
+def session (client: OpenAI, prompt: str, questions: list[str]) -> list[dict]:
     messages = [{ "role": "system", "content": prompt}]
     print (prompt)
     for q in questions:
@@ -45,6 +45,9 @@ def session (client: OpenAI, prompt: str, questions: list[str]) -> None:
         for c in completion.choices:
             print ("A: ", trim_content(c.message.content))
 
+    # Or should we return List of ChatCompletions?
+    return messages
+
 def main ():
     # Default api_key is to take it from OPENAI_API_KEY environment
     # variable:
@@ -55,9 +58,9 @@ def main ():
 
     prompt = """
     Reply with a short sentence or just a few words. No notes!
-    Bitte die Antworten kurz fassen!
-    Будь кратким!
-    """
+   """
+    # Bitte die Antworten kurz fassen!
+    # Будь кратким!
 
     questions = [
         "Who is James Bond?",
@@ -65,12 +68,13 @@ def main ():
         "Who wrote it all?",
         "When was he born?",
         "Is he alive?",
-        "Wer ist James Bond?",
-        "Кто такой Джеймс Бонд?",
-        "Were did we stop?"
+        # "Wer ist James Bond?",
+        # "Кто такой Джеймс Бонд?",
+        # "Were did we stop?"
     ]
 
     # Run this particular session
-    session (client, prompt, questions)
+    transcript = session (client, prompt, questions)
+    print (dumps(transcript, indent=4))
 
 main()
