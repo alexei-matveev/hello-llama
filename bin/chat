@@ -1,22 +1,25 @@
 #!/usr/bin/env python
+"""This example session works mostly as intended with
+Phi-3-mini-4k-instruct-q4.gguf model.  It starts to break apart when
+switching to other languages.  Even German is not always perfect.
+Sometimes the model translates all of the chat history to german
+instead of replying to the one question it was asked.  One probably
+schould not mix languages in one session.
+"""
 
-import os
-import json
+# import os
+# import json
 from openai import OpenAI
 
-# Default api_key is to take it from OPENAI_API_KEY environment
-# variable:
-client = OpenAI(
-    base_url="http://backup:8080/v1",
-    api_key="usually-not-required",
-)
-
-# Phi-3 uses these tokens that appear to leak through the API. Also
-# whitespace in front of the completion is irritating in regular case.
+# Phi-3 uses tokens <|end|> to signal the end of the completion that
+# appear to leak through the API. Also whitespace in front of the
+# completion is irritating in regular case. Also seen "<|assistant|>"
+# token in the middle of the completion as if the models decided to
+# give another, usually longer, reply. Is it a failure mode?
 def trim_content (text: str) -> str:
     return text.strip().removesuffix("<|end|>")
 
-def session (client, prompt: str, questions: list[str]) -> None:
+def session (client: OpenAI, prompt: str, questions: list[str]) -> None:
     messages = [{ "role": "system", "content": prompt}]
     print (prompt)
     for q in questions:
@@ -27,12 +30,12 @@ def session (client, prompt: str, questions: list[str]) -> None:
             # Probably ignored:
             model="gpt-3.5-turbo")
 
-        # Phi-3 replies end with "<|end|>" token that is not stripped off
-        # on parsing of completions. Is it a problem if we pass the token
-        # back unchanged? It might be, as the models seems to occasionally
-        # engage in discussion with itself.  Also we seem to be putting
-        # Dict and isomorfic ChatCompletionMessage into the same list
-        # here.
+        # Phi-3 replies with "<|end|>" tokens that are not stripped
+        # off on parsing of completions. Is it a problem if we pass
+        # the token back unchanged? It might be, as the models seems
+        # to occasionally engage in discussion with itself.  Also we
+        # schould not be putting dict[] and isomorfic
+        # ChatCompletionMessage into the same list here.
         messages = messages + \
             [{"role": c.message.role,
               "content": trim_content(c.message.content)}
@@ -42,28 +45,32 @@ def session (client, prompt: str, questions: list[str]) -> None:
         for c in completion.choices:
             print ("A: ", trim_content(c.message.content))
 
-# This esample session works mostly as intended with
-# Phi-3-mini-4k-instruct-q4.gguf model. It starts to break apart when
-# switching to other languages.  Even German is not always perfect.
-# Sometimes the model translates all of the chat history to german
-# instead of replying to the one question it was asked. One probably
-# schould not mix languages in one session.
-prompt = """
+def main ():
+    # Default api_key is to take it from OPENAI_API_KEY environment
+    # variable:
+    client = OpenAI(
+        base_url="http://backup:8080/v1",
+        api_key="usually-not-required",
+    )
+
+    prompt = """
     Reply with a short sentence or just a few words. No notes!
     Bitte die Antworten kurz fassen!
     Будь кратким!
-"""
+    """
 
-questions = [
-    "Who is James Bond?",
-    "Is he dangerous?",
-    "Who wrote it all?",
-    "When was he born?",
-    "Is he alive?",
-    "Wer ist James Bond?",
-    "Кто такой Джеймс Бонд?",
-    "Were did we stop?"
-]
+    questions = [
+        "Who is James Bond?",
+        "Is he dangerous?",
+        "Who wrote it all?",
+        "When was he born?",
+        "Is he alive?",
+        "Wer ist James Bond?",
+        "Кто такой Джеймс Бонд?",
+        "Were did we stop?"
+    ]
 
-# Run this particular session
-session (client, prompt, questions)
+    # Run this particular session
+    session (client, prompt, questions)
+
+main()
