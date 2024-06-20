@@ -2,7 +2,7 @@
 #
 # Usage:
 #
-#     $ ./store add https://python.langchain.com/v0.2/docs/introduction/ https://python.langchain.com/v0.2/docs/concepts/
+#     $ ./store add https://python.langchain.com/v0.2/docs/{introduction,concepts}
 #     $ ./store query "what is a retriever?"
 #
 # Ist Embedding  ohne Cloud etwa  auch unrealistisch? Müssen  wir echt
@@ -199,5 +199,6 @@ if __name__ == "__main__":
         add(sys.argv[2:])
     else:
         print(
-            sys.argv[0], ": Don't know what to do with these arguments: ", sys.argv[1:]
+            f"{sys.argv[0]}: Don't know what to do with these arguments: ",
+            sys.argv[1:]
         )
