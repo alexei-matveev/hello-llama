@@ -50,9 +50,9 @@ fi
 # Example   uses  see   the  description   of  "POST   /v1/embeddings:
 # OpenAI-compatible  embeddings API"  in the  Server README  [1]. Note
 # that OpenAI Endpoint /v1/embeddings  is plural whereas /embedding is
-# singular. Note use of `input` in OpenAI API and `content`
-# OpenAPI /v1/embeddings  appears  to accept  an array  of
-# strings in the `input` field [2].
+# singular.   Note use  of  `input`  in OpenAI  API  and `content`  in
+# llama.cpp proper. OpenAPI /v1/embeddings  appears to accept an array
+# of strings in the `input` field as well [2].
 #
 #   curl -sX POST http://localhost:8080/embedding \
 #	 -d '{"content": "some text to embed"}'
