@@ -38,15 +38,38 @@ if [ ! -f models/$model ]; then
 fi
 
 # There seems to be less swapping with --no-mmap, but large models may
-# lock you laptop on loading!.
+# lock you laptop on loading!
+#
+# With --embeddings  flag we tell  the server to offer  Embedding API.
+# There seem to be two endpoints enabled with one flag [1]:
+#
+#   --embeddings: Enable embedding vector output and the OAI compatible
+#       endpoint /v1/embeddings. Physical batch size (--ubatch-size) must
+#       be carefully defined. Default: disabled
+#
+# Example uses, note /v1/embeddings is plural whereas /embedding is
+# singular:
+#
+#   curl -sX POST "http://localhost:8080/embedding"     -d '{"content": "some text to embed"}'
+#   curl -sX POST "http://localhost:8080/v1/embeddings" -d '{"content": "some text to embed"}'
+#
+#   curl -sX POST https://localhost:8080/embedding \
+#     -H "Authorization: Bearer $AUTH_TOKEN" \
+#     -H "Content-Type: application/json" \
+#     -d '{"model": "phi-3-mini-4k-instruct",
+#          "content": "some text to embed",
+#          "encoding_format": "float"}'
+#     | jq .
+#
+# [1] https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md
 
-#      --verbose \
 podman run --rm \
        -p 8080:8080 \
        -v $PWD/models:/models \
        localhost/llama-cpp \
        -m models/$model \
        --chat-template phi3 \
+       --embeddings \
        --no-mmap \
        --log-format text \
        --host 0.0.0.0 \
