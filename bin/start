@@ -47,21 +47,26 @@ fi
 #       endpoint /v1/embeddings. Physical batch size (--ubatch-size) must
 #       be carefully defined. Default: disabled
 #
-# Example uses, note /v1/embeddings is plural whereas /embedding is
-# singular:
+# Example   uses  see   the  description   of  "POST   /v1/embeddings:
+# OpenAI-compatible  embeddings API"  in the  Server README  [1]. Note
+# that OpenAI Endpoint /v1/embeddings  is plural whereas /embedding is
+# singular. Note use of `input` in OpenAI API and `content`
+# OpenAPI /v1/embeddings  appears  to accept  an array  of
+# strings in the `input` field [2].
 #
-#   curl -sX POST "http://localhost:8080/embedding"     -d '{"content": "some text to embed"}'
-#   curl -sX POST "http://localhost:8080/v1/embeddings" -d '{"content": "some text to embed"}'
+#   curl -sX POST http://localhost:8080/embedding \
+#	 -d '{"content": "some text to embed"}'
 #
-#   curl -sX POST https://localhost:8080/embedding \
-#     -H "Authorization: Bearer $AUTH_TOKEN" \
-#     -H "Content-Type: application/json" \
-#     -d '{"model": "phi-3-mini-4k-instruct",
-#          "content": "some text to embed",
-#          "encoding_format": "float"}'
-#     | jq .
+#   curl -sX POST http://localhost:8080/v1/embeddings \
+#        -H "Authorization: Bearer no-key" \
+#        -H "Content-Type: application/json" \
+#        -d '{"input": ["hello", "world"],
+#             "model": "phi-3-mini-4k-instruct",
+#             "encoding_format": "float"}'
+#   | jq | less
 #
 # [1] https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md
+# [2] https://platform.openai.com/docs/api-reference/embeddings
 
 podman run --rm \
        -p 8080:8080 \
