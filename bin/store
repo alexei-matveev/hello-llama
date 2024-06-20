@@ -1,0 +1,203 @@
+#!/usr/bin/env python
+#
+# Usage:
+#
+#     $ ./store add https://python.langchain.com/v0.2/docs/introduction/ https://python.langchain.com/v0.2/docs/concepts/
+#     $ ./store query "what is a retriever?"
+#
+# Ist Embedding  ohne Cloud etwa  auch unrealistisch? Müssen  wir echt
+# alles was wir zu Vektoren konvertieren wollen in die Cloud schicken?
+# Scheinbar nutzen  fast alle  Google- und Bing-Hits  vollwertige LLMs
+# für Embeddings, geht es vielleicht  auch einfacher?  Und viele Links
+# führen am Ende zu Sentence Transformers [1]:
+#
+#     pip install -U sentence-transformers
+#
+# Dies wird SEHR viel nach sich  ziehen!  Kann man gar keine Embedding
+# auf CPUs ohne den ganzen  Nvidia Cuda Zeug erstellen?  StackOverflow
+# schlägt Folgendes vor [2]:
+#
+#     pip install --no-cache-dir --upgrade pip
+#     pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+#     pip install --no-cache-dir sentence-transformers
+#
+# Das  Model  wird  bei  der ersten  Ausführung  runtergeladen,  siehe
+# ~/.cache/huggingface/ und drunter. Siehe  auch den Server Ansatz mit
+# fertigen Containern [3]. Edited in VScode.
+#
+# [1] https://www.sbert.net/
+# [2] https://stackoverflow.com/questions/77205123/how-do-i-slim-down-sberts-sentencer-transformer-library
+# [3] https://huggingface.co/docs/text-embeddings-inference/quick_tour
+
+# Das wird das berüchtigte Pickle-Format sein. Wollen wir es aus
+# sys.argv[1] nehmen?
+path = "./store.d"
+
+
+# Load  a pretrained  Sentence  Transformer  model.  Telefoniert  etwa
+# dieses  Code  nach  Hause  auch wenn  alles  lokal  gecached  wurde?
+# Jedenfalls  dauert es  an  dieser Stelle  einige  Sekunden.  Wie  es
+# ausschaut brauchen wir das Modell für Embedding von neuen Dokumenten
+# aber auch für (Embedding von) Queries. D.h. bei jeder Ausführung!
+def make_model():
+    from sentence_transformers import SentenceTransformer
+
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    return model
+
+
+# Ein SentenceTransformer  Modell bringt die Methode  encode() mit die
+# Batches und einzelne Sentences konvertieren kann. Und wie bringt man
+# den Vector Store dazu diese Embeddings zu konsumieren?
+#
+# LangChain  besteht  darauf ein  Object  vom  Class "Embeddings"  mit
+# embed_documents()  und  embed_query()   überall  mitzugeben.   Siehe
+# FakeEmbeddngs für Inspiration [1].
+#
+#   pip install langchain_core
+#   pip install langchain_community
+#
+# [1] https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/embeddings/fake.py
+from typing import List
+from langchain_core.embeddings import Embeddings
+
+
+# rom langchain_core.pydantic_v1 import BaseModel
+class CustomEmbeddings(Embeddings):
+    """Custom embedding model."""
+
+    st_model = None  # SentenceTransformer
+
+    def __init__(self, model):
+        self.st_model = model
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        # SentenceTransformer kann Batches:
+        return self.st_model.encode(texts)
+
+    def embed_query(self, text: str) -> List[float]:
+        return self.st_model.encode(text)
+
+
+# pip install langchain_openai
+# NOT YET: pip install dotenv
+def make_custom_embeddings():
+    if True:
+        print("Calling Huggingface ...")
+        model = make_model()
+        print("model=", model)
+
+        custom_embeddings = CustomEmbeddings(model)
+    else:
+        from langchain_openai import OpenAIEmbeddings
+        # from dotenv import load_dotenv
+        # Zugangsdaten eventuell in .env in dem Repo Root:
+        # load_dotenv()
+        custom_embeddings = OpenAIEmbeddings(
+            base_url="http://localhost:8080/v1",
+            api_key="no-key"
+        )
+
+    # print("hi there! =>", custom_embeddings.embed_query("hi there!"))
+    return custom_embeddings
+
+
+# WebBaseLoader braucht BS4:
+#
+#     pip install beautifulsoup4
+#
+# Was machen wir wenn das Runterladen nicht klappt?  Midenstens einmal
+# wurde hier requests.exceptions.ConnectionError gesichtet.
+def scrape(urls):
+    from langchain_community.document_loaders import WebBaseLoader
+
+    loader = WebBaseLoader(urls)
+    docs = loader.load()
+    return docs
+
+
+# Woanders war der Chunk Size bei 3000 aber wir wollen kürzer treten.
+#
+#     pip install tiktoken
+#
+def split(docs):
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+    splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        chunk_size=500, chunk_overlap=50
+    )
+    return splitter.split_documents(docs)
+
+
+# LangChain Vector Stores setzen die jeweilige "Treiber" voraus:
+#
+#   pip install faiss-cpu
+#
+# Alternativ  hier die  eventuell bestehende  DB einlesen  und weitere
+# Inhalte, wie in der Kommandozeile angegeben hinzufügen.
+def add(urls):
+    docs = scrape(urls)
+
+    print([len(d.page_content) for d in docs])
+
+    docs = split(docs)
+
+    print([len(d.page_content) for d in docs])
+
+    from langchain_community.vectorstores import FAISS
+
+    custom_embeddings = make_custom_embeddings()
+    try:
+        db = FAISS.load_local(
+            path, embeddings=custom_embeddings, allow_dangerous_deserialization=True
+        )
+        # Wie  tut   man  Dokumente   hinzufügen,  statt  die   DB  zu
+        # überschreiben? Dies wurde einfach nur geraten:
+        db.add_documents(docs)
+    except:
+        db = FAISS.from_documents(docs, custom_embeddings)
+
+    db.save_local(path)
+
+
+def query(queries):
+    # Wollen wir es für alle Queries in argv[] ausführen?
+    query = queries[0]
+
+    from langchain_community.vectorstores import FAISS
+
+    custom_embeddings = make_custom_embeddings()
+    db = FAISS.load_local(
+        path, embeddings=custom_embeddings, allow_dangerous_deserialization=True
+    )
+
+    # Ein Vector Store kann zu einem Retriever [1] umgewandelt werden um
+    # nach Text zu suchen.
+    #
+    # [1] https://python.langchain.com/v0.2/docs/how_to/#retrievers
+    retriever = db.as_retriever()
+
+    # Hm, man  könnte meinen was hier  geliefert wird ist für  alle Zwecke
+    # unlesbar. Schaffen LLMs wirklich daraus etwas lesbares zu machen?
+    if False:
+        hits = retriever.invoke(query)
+    else:
+        hits = db.similarity_search(query=query)
+
+    for d in hits:
+        print(">>>>>>>>>>>>>>>>>>>>")
+        print(d.page_content)
+        print("<<<<<<<<<<<<<<<<<<<<")
+
+
+if __name__ == "__main__":
+    import sys
+
+    if sys.argv[1] == "query":
+        query(sys.argv[2:])
+    elif sys.argv[1] == "add":
+        add(sys.argv[2:])
+    else:
+        print(
+            sys.argv[0], ": Don't know what to do with these arguments: ", sys.argv[1:]
+        )
