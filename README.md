@@ -112,9 +112,13 @@ Older CPUs supporting only AVX will get SIGILL:
 
 #### Open Web UI
 
-See [Documentation](https://docs.openwebui.com/)
+See [Documentation](https://docs.openwebui.com/) and maybe the
+[discussion](https://github.com/ggerganov/llama.cpp/discussions/7712).
 
-    mkdir open-webui
-    podman run -d -p 3000:8080 --add-host=host.containers.internal:host-gateway -v $PWD/open-webui:/app/backend/data --name open-webui --rm ghcr.io/open-webui/open-webui:main
+    $ mkdir open-webui
+    $ podman run -d -p 3000:8080 --add-host=host.containers.internal:host-gateway -v $PWD/open-webui:/app/backend/data --name open-webui --rm ghcr.io/open-webui/open-webui:main
 
-https://github.com/ggerganov/llama.cpp/discussions/7712
+Then navigate to [Open WebUI}(http://localhost:3000) and configure
+OpenAI Endpoint at `http://host.containers.internal:8080/v1` with
+arbitrary API key. It does not look like the system prompt from the
+GUI has any effect on the model replies.
