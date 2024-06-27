@@ -5,14 +5,21 @@ if [ ! -d models/ ]; then
     exit 1
 fi
 
-# Model sizes:
+# Generational Models:
 #
 #   19M     stories15M-q4_0.gguf
 #   1.5G    ggml-model-q4_0.gguf
 #   2.3G    Phi-3-mini-4k-instruct-q4.gguf
 #   4.1G    mistral-7b-v0.1.Q4_K_M.gguf
 #   7.4G    amethyst-13b-mistral.Q4_K_M.gguf
+#
+# Embedding Models:
+#   21M    all-MiniLM-L6-v2-Q4_K_M.gguf
 
+# This  embedding  Model  makes  sense only  for  embedding,  no  chat
+# completion. The server  will terminate if you ask it  to.  Isnt it a
+# BUG? Why not just report an error. Hm, are we doing it wrong?
+# url=https://huggingface.co/second-state/All-MiniLM-L6-v2-Embedding-GGUF/resolve/main/all-MiniLM-L6-v2-Q4_K_M.gguf
 
 # url=https://huggingface.co/ggml-org/models/resolve/main/tinyllamas/stories15M-q4_0.gguf
 # url=https://huggingface.co/ggml-org/models/resolve/main/phi-2/ggml-model-q4_0.gguf
@@ -64,14 +71,18 @@ fi
 #             "encoding_format": "float"}'
 #   | jq | less
 #
+# See also other approaches [3].
+#
 # [1] https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md
 # [2] https://platform.openai.com/docs/api-reference/embeddings
+# [3] https://neuml.hashnode.dev/rag-with-llamacpp-and-external-api-services
 
 podman run --rm \
        -p 8080:8080 \
        -v $PWD/models:/models \
        localhost/llama-cpp \
        -m models/$model \
+       --alias phi-3-mini-4k-instruct \
        --chat-template phi3 \
        --embeddings \
        --no-mmap \
