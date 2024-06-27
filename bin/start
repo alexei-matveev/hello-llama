@@ -32,6 +32,10 @@ url=https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Ph
 # --chat-template=llama3 "Instruct" is missing:
 # url=https://huggingface.co/QuantFactory/Meta-Llama-3-8B-GGUF/resolve/main/Meta-Llama-3-8B.Q4_K_M.gguf
 
+# unknown model architecture: 'gemma2'
+# --chat-template=gemma?
+# url=https://huggingface.co/bartowski/gemma-2-9b-it-GGUF/resolve/main/gemma-2-9b-it-Q4_K_M.gguf
+
 # This will need ~9G RAM and will be really slow on CPU. Maybe think
 # of grammars like root ::= "yes" | "no" ..
 # url=https://huggingface.co/TheBloke/Amethyst-13B-Mistral-GGUF/resolve/main/amethyst-13b-mistral.Q4_K_M.gguf
@@ -82,7 +86,7 @@ podman run --rm \
        -v $PWD/models:/models \
        localhost/llama-cpp \
        -m models/$model \
-       --alias phi-3-mini-4k-instruct \
+       --alias $(basename $model .gguf) \
        --chat-template phi3 \
        --embeddings \
        --no-mmap \
