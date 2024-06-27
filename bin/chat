@@ -74,7 +74,7 @@ def main ():
     ]
 
     # Run this particular session
-    # transcript = session (client, prompt, questions)
+    transcript = session (client, prompt, questions)
     #print (dumps(transcript, indent=4))
 
     text = """
@@ -99,10 +99,10 @@ def main ():
     developing new features for the ggml library.
     """
 
-    transcript = session (
-        client,
-        "Please summarize text. Use a few short and simple sentences.",
-        [text])
+    # transcript = session (
+    #     client,
+    #     "Please summarize text. Use a few short and simple sentences.",
+    #     [text])
 
 
 main()
