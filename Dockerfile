@@ -3,8 +3,8 @@
 #
 #     $ buildah bud --layers -t llama-cpp .
 #     $ buildah images
-#     $ podman run --rm --entrypoint /main   localhost/llama-cpp -h
-#     $ podman run --rm --entrypoint /server localhost/llama-cpp -h
+#     $ podman run --rm --entrypoint /llama-cli    localhost/llama-cpp -h
+#     $ podman run --rm --entrypoint /llama-server localhost/llama-cpp -h
 #
 # With populated models/ run inference:
 #
@@ -25,7 +25,8 @@
 
 ARG BASE_IMAGE=registry.access.redhat.com/ubi8:8.10 # ubi9:9.4
 #RG BASE_IMAGE=ubuntu:22.04
-ARG LLAMA_RELEASE=b3078
+ARG LLAMA_RELEASE=b3190
+    # b3078 (main, server)
 
 FROM $BASE_IMAGE as build
 ARG LLAMA_RELEASE
@@ -47,7 +48,7 @@ WORKDIR /app
 # COPY . .
 RUN mkdir llama.cpp && \
     curl -sL https://github.com/ggerganov/llama.cpp/tarball/$LLAMA_RELEASE | tar zxf - -C llama.cpp/ --strip-components=1
-RUN make -C llama.cpp -j$(nproc) server main
+RUN make -C llama.cpp -j$(nproc) llama-server llama-cli
 
 FROM $BASE_IMAGE as runtime
 
@@ -57,9 +58,9 @@ FROM $BASE_IMAGE as runtime
 RUN dnf install -y libgomp
 
 # Does it work with --layers?
-COPY --from=build /app/llama.cpp/main /main
-COPY --from=build /app/llama.cpp/server /server
+COPY --from=build /app/llama.cpp/llama-server /llama-cli
+COPY --from=build /app/llama.cpp/llama-server /llama-server
 
 ENV LC_ALL=C.utf8
 
-ENTRYPOINT [ "/server" ]
+ENTRYPOINT [ "/llama-server" ]
