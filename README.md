@@ -109,3 +109,12 @@ Older CPUs supporting only AVX will get SIGILL:
     $ curl --request POST --url http://localhost:8080/completion \
            --header "Content-Type: application/json" \
            --data '{"prompt": "Building a website can be done in 10 simple steps:","n_predict": 128}'
+
+#### Open Web UI
+
+See [Documentation](https://docs.openwebui.com/)
+
+    mkdir open-webui
+    podman run -d -p 3000:8080 --add-host=host.containers.internal:host-gateway -v $PWD/open-webui:/app/backend/data --name open-webui --rm ghcr.io/open-webui/open-webui:main
+
+https://github.com/ggerganov/llama.cpp/discussions/7712
