@@ -20,30 +20,17 @@ spec:
         persistentVolumeClaim:
           claimName: "llama-models"
       containers:
-      - name: llama-server
-        #  podman run --rm \
-        # -p 8080:8080 \
-        # -v $PWD/models:/models \
-        # localhost/llama-cpp \
-        # -m models/$model \
-        # --alias $(basename $model .gguf) \
-        # --chat-template phi3 \
-        # --embeddings \
-        # --no-mmap \
-        # --log-format text \
-        # --host 0.0.0.0 \
-        # --metrics \
-        # -c 2048 \
-        # $*
+      - name: "llama-server"
         image: "localhost/llama-cpp:latest"
         imagePullPolicy: "IfNotPresent"
         # command: ["tail"]
         # args: ["-f", "/dev/null"]
         args:
         - "--model"
-        - "/models/stories15M-q4_0.gguf"
-        # - "--chat-template"
-        # - "phi3"
+        # "/models/stories15M-q4_0.gguf"
+        - "/models/Phi-3-mini-4k-instruct-q4.gguf"
+        - "--chat-template"
+        - "phi3"
         - "--embeddings"
         - "--no-mmap"
         - "--host"
