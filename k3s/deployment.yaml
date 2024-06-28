@@ -37,8 +37,20 @@ spec:
         # $*
         image: "localhost/llama-cpp:latest"
         imagePullPolicy: "IfNotPresent"
-        command: ["tail"]
-        args: ["-f", "/dev/null"]
+        # command: ["tail"]
+        # args: ["-f", "/dev/null"]
+        args:
+        - "--model"
+        - "/models/stories15M-q4_0.gguf"
+        # - "--chat-template"
+        # - "phi3"
+        - "--embeddings"
+        - "--no-mmap"
+        - "--host"
+        - "0.0.0.0"
+        - "--metrics"
+        - "--ctx-size"
+        - "2048"
         ports:
         - containerPort: 8080
         volumeMounts:
