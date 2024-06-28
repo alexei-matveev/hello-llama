@@ -1,0 +1,330 @@
+#
+# kubectl apply -k .
+#
+# See Zabbix  [1] and Docker Hub  Pages for Server [2],  Frontend [3],
+# Agent [4], and MySQL [5].
+#
+# NOTE 1:  there is potential  race condition.  Zabbix  Server startup
+# script checks if the  DB & DB user already exist  in order to create
+# them when necessary.  Especially without permanent storage for MySQL
+# you probably  better off starting  or RE-starting the  Zabbix Server
+# Pod after MySQL is already running.  It basically boils down to: "do
+# not delete the  DB when Zabbix Server ist already  running".  If you
+# did anyway --- restart Zabbix Server Pod.
+#
+# NOTE  2: There  is likely  another race  condition. PV  Creation and
+# MySQL  Initializing the  DB  files. At  least once  I  had to  scale
+# replicas = 0  in zabbix-db deployment and delete DB  files on the pv
+# to clean up.
+#
+# [1] https://www.zabbix.com/container_images
+# [2] https://hub.docker.com/r/zabbix/zabbix-server-mysql
+# [3] https://hub.docker.com/r/zabbix/zabbix-web-apache-mysql
+# [4] https://hub.docker.com/r/zabbix/zabbix-agent
+# [5] https://hub.docker.com/_/mysql
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zabbix-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: zabbix-server
+  # Dont let two Pods fiddle with the DB at the same time:
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        component: zabbix-server
+    spec:
+      containers:
+      - name: zabbix-server
+        # docker run --name some-zabbix-server-mysql -e
+        # DB_SERVER_HOST="some-mysql-server" -e MYSQL_USER="some-user"
+        # -e MYSQL_PASSWORD="some-password" -d
+        # zabbix/zabbix-server-mysql:tag
+        image: zabbix/zabbix-server-mysql:centos-5.2.2
+        #mage: registry.gitlab.com/f0bec0d/hello-zabbix:0.0.4
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 10051
+        env:
+        - name: "DB_SERVER_HOST"
+          value: "zabbix-db"
+        - name: "DB_SERVER_PORT"
+          value: "3306"
+          # MySQL Root is used to create the user & database:
+        - name: "MYSQL_ROOT_PASSWORD"
+          value: "root"
+        - name: "MYSQL_USER"
+          value: "zabbix"
+        - name: "MYSQL_PASSWORD"
+          value: "zabbix"
+        - name: "MYSQL_DATABASE"
+          value: "zabbix"
+      - name: zabbix-agent
+        #
+        # The  default  Zabbix  DB  already contains  one  Host  named
+        # "Zabbix  Server" at  localhost:10050,  so we  also start  an
+        # agent for the server to talk to.
+        #
+        # docker run --name some-zabbix-agent -e
+        # ZBX_HOSTNAME="some-hostname" -e
+        # ZBX_SERVER_HOST="some-zabbix-server" -d
+        # zabbix/zabbix-agent:tag
+        image: zabbix/zabbix-agent:centos-5.2.2
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 10050
+        env:
+          # For "Server" & "ServerActive" Config Lines ...
+        - name: "ZBX_SERVER_HOST"
+          value: "127.0.0.1"
+          # ...    Unless   you   define   ZBX_PASSIVESERVERS   and/or
+          # ZBX_ACTIVESERVERS   explicitly.   It    is   likely   that
+          # "zabbix-server" will only resolve to  the source IP of the
+          # Pod  if  the  Service   named  "zabbix-server"  remains  a
+          # Headless Server:
+        - name: "ZBX_PASSIVESERVERS"
+          value: "127.0.0.1,zabbix-server"
+          # agent.hostname  =  system.hostname  by  default  which  is
+          # random in Kubernetes. Unless you set it here:
+        - name: "ZBX_HOSTNAME"
+          value: "Zabbix server"
+---
+# With a Headless Service the name will resolve to the Pod IP:
+apiVersion: v1
+kind: Service
+metadata:
+  name: zabbix-server
+spec:
+  type: ClusterIP
+  # Forcing  IP to  None for  a Headless  Service may  cause an  error
+  # saying the field is immutable if the Service already exists:
+  clusterIP: "None"
+  selector:
+    component: zabbix-server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zabbix-frontend
+spec:
+  # Starting  from  v5.2 it  is  official  ---  you can  "scale"  your
+  # fronted. I think  ist was said that "sessions affinity"  is not an
+  # issue anymore. Let try if this works:
+  replicas: 2
+  selector:
+    matchLabels:
+      component: zabbix-frontend
+  template:
+    metadata:
+      labels:
+        component: zabbix-frontend
+    spec:
+      containers:
+        # docker run --name some-zabbix-web-apache-mysql -e
+        # DB_SERVER_HOST="some-mysql-server" -e MYSQL_USER="some-user"
+        # -e MYSQL_PASSWORD="some-password" -e
+        # ZBX_SERVER_HOST="some-zabbix-server" -e
+        # PHP_TZ="some-timezone" -d zabbix/zabbix-web-apache-mysql:tag
+      - name: zabbix-frontend
+        image: zabbix/zabbix-web-apache-mysql:centos-5.2.2
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: "PHP_TZ"
+          value: "Europe/Berlin"
+        - name: "ZBX_SERVER_HOST"
+          value: "zabbix-server"
+        - name: "DB_SERVER_HOST"
+          value: "zabbix-db"
+        - name: "DB_SERVER_PORT"
+          value: "3306"
+        - name: "MYSQL_USER"
+          value: "zabbix"
+        - name: "MYSQL_PASSWORD"
+          value: "zabbix"
+        - name: "MYSQL_DATABASE"
+          value: "zabbix"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zabbix-frontend
+spec:
+  type: ClusterIP
+  # Should take cate of load balancing between all of the replicas:
+  selector:
+    component: zabbix-frontend
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zabbix-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: zabbix-db
+  # Strategy  =  Recreate  instructs  Kubernetes to  not  use  rolling
+  # updates.  Rolling updates  will not work, as you  cannot have more
+  # than one  Pod running at a  time. The Recreate strategy  will stop
+  # the  first  pod  before  creating  a  new  one  with  the  updated
+  # configuration.
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        component: zabbix-db
+    spec:
+      # Volumes used by some or all containers of the Pod:
+      volumes:
+      - name: "zabbix-db"
+        persistentVolumeClaim:
+          claimName: "zabbix-db"
+      containers:
+        # docker run --name some-mysql -e
+        # MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:tag
+        #
+        # With  v8.0  it my  happen  thata  the older  clients  cannot
+        # connect  because of  the  changed default  by password  hash
+        # algo.  Use  v5.7.  The CentOS based  zabbix server container
+        # image brings an older mysqladmin and likely other tools.
+        #
+      - name: zabbix-db
+        image: mysql:5.7.30
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - mountPath: "/var/lib/mysql"
+          name: "zabbix-db"
+        env:
+        - name: "MYSQL_ROOT_PASSWORD"
+          value: "root"
+          # Let the Zabbix Startup Procedure create the DB, avoid
+          # collation issues:
+        # - name: "MYSQL_USER"
+        #   value: "zabbix"
+        # - name: "MYSQL_PASSWORD"
+        #   value: "zabbix"
+        # - name: "MYSQL_DATABASE"
+        #   value: "zabbix"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zabbix-db
+spec:
+  type: ClusterIP
+  selector:
+    component: zabbix-db
+  ports:
+  - port: 3306
+    targetPort: 3306
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zabbix-agent2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: zabbix-agent2
+  template:
+    metadata:
+      labels:
+        component: zabbix-agent2
+    spec:
+      containers:
+      - name: zabbix-agent2
+        # docker run --name some-zabbix-agent -e
+        # ZBX_HOSTNAME="some-hostname" -e
+        # ZBX_SERVER_HOST="some-zabbix-server" -d
+        # zabbix/zabbix-agent2:tag
+        #
+        # FIXME: why cannot I make it work with real zabbix_agent2?
+        # Also where are v5.2 images?  See the issue
+        # https://github.com/zabbix/zabbix-docker/issues/758
+        #
+        image: zabbix/zabbix-agent:centos-5.2.2 # C-agent, not Go-agent!
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 10050
+        env:
+          # It is likely that "zabbix-server" will only resolve to the
+          # source IP of the Pod  if the Service named "zabbix-server"
+          # remains a Headless Server:
+        - name: "ZBX_SERVER_HOST"
+          value: "zabbix-server"
+          # Hm,  allowing from  "zabbix-server" will  not do  it.  The
+          # problem is the IP packets arrive from the SRC IP 10.42.0.1
+          # of  cni0 interface,  not from  the zabbix-server  Pod.  Is
+          # this  a kind  of  SNAT at  work?  FIXME:  this  is a  very
+          # permissive setting:
+        - name: "ZBX_PASSIVESERVERS"
+          value: "10.42.0.0/16"
+          # agent.hostname  =  system.hostname  by  default  which  is
+          # random in Kubernetes. Unless you set it here:
+        - name: "ZBX_HOSTNAME"
+          value: "zabbix-agent2"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zabbix-agent2
+spec:
+  type: ClusterIP
+  selector:
+    component: zabbix-agent2
+  ports:
+  - port: 10050
+    targetPort: 10050
+---
+#
+# We  assume here  that  *.localhost resolves  to  the local  machine.
+# Following URL should be directed to corresponding Service, also with
+# https:// protocoll:
+#
+#     http://zabbix.localhost
+#
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: zabbix
+spec:
+  rules:
+  - host: zabbix.localhost
+    http:
+      paths:
+      - backend:
+          serviceName: zabbix-frontend
+          servicePort: 80
+---
+# https://github.com/rancher/local-path-provisioner
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: zabbix-db
+spec:
+  accessModes:
+    - ReadWriteOnce
+  # When you  dont specify  storage class at  all the  default storage
+  # class may be chosen. In k3s with local-path provisioner it is also
+  # the  default one.  Omitted  storageClassName is  not  the same  as
+  # storageClassName = "".
+  # storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+...
