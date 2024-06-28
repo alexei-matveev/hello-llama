@@ -10,9 +10,6 @@ spec:
   selector:
     matchLabels:
       component: llama-server
-  # Dont let two Pods fiddle with the DB at the same time:
-  strategy:
-    type: Recreate
   template:
     metadata:
       labels:
@@ -20,254 +17,41 @@ spec:
     spec:
       containers:
       - name: llama-server
-        # docker run --name some-llama-server-mysql -e
-        # DB_SERVER_HOST="some-mysql-server" -e MYSQL_USER="some-user"
-        # -e MYSQL_PASSWORD="some-password" -d
-        # llama/llama-server-mysql:tag
-        image: llama/llama-server-mysql:centos-5.2.2
-        #mage: registry.gitlab.com/f0bec0d/hello-llama:0.0.4
-        imagePullPolicy: IfNotPresent
+        #  podman run --rm \
+        # -p 8080:8080 \
+        # -v $PWD/models:/models \
+        # localhost/llama-cpp \
+        # -m models/$model \
+        # --alias $(basename $model .gguf) \
+        # --chat-template phi3 \
+        # --embeddings \
+        # --no-mmap \
+        # --log-format text \
+        # --host 0.0.0.0 \
+        # --metrics \
+        # -c 2048 \
+        # $*
+        image: "localhost/llama-cpp:latest"
+        imagePullPolicy: "IfNotPresent"
+        command: ["tail"]
+        args: ["-f", "/dev/null"]
         ports:
-        - containerPort: 10051
+        - containerPort: 8080
         env:
-        - name: "DB_SERVER_HOST"
-          value: "llama-db"
-        - name: "DB_SERVER_PORT"
-          value: "3306"
-          # MySQL Root is used to create the user & database:
-        - name: "MYSQL_ROOT_PASSWORD"
-          value: "root"
-        - name: "MYSQL_USER"
-          value: "llama"
-        - name: "MYSQL_PASSWORD"
-          value: "llama"
-        - name: "MYSQL_DATABASE"
-          value: "llama"
-      - name: llama-agent
-        #
-        # The  default  Llama  DB  already contains  one  Host  named
-        # "Llama  Server" at  localhost:10050,  so we  also start  an
-        # agent for the server to talk to.
-        #
-        # docker run --name some-llama-agent -e
-        # ZBX_HOSTNAME="some-hostname" -e
-        # ZBX_SERVER_HOST="some-llama-server" -d
-        # llama/llama-agent:tag
-        image: llama/llama-agent:centos-5.2.2
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 10050
-        env:
-          # For "Server" & "ServerActive" Config Lines ...
-        - name: "ZBX_SERVER_HOST"
-          value: "127.0.0.1"
-          # ...    Unless   you   define   ZBX_PASSIVESERVERS   and/or
-          # ZBX_ACTIVESERVERS   explicitly.   It    is   likely   that
-          # "llama-server" will only resolve to  the source IP of the
-          # Pod  if  the  Service   named  "llama-server"  remains  a
-          # Headless Server:
-        - name: "ZBX_PASSIVESERVERS"
-          value: "127.0.0.1,llama-server"
-          # agent.hostname  =  system.hostname  by  default  which  is
-          # random in Kubernetes. Unless you set it here:
-        - name: "ZBX_HOSTNAME"
-          value: "Llama server"
+        - name: "XXX"
+          value: "yyy"
 ---
-# With a Headless Service the name will resolve to the Pod IP:
 apiVersion: v1
 kind: Service
 metadata:
   name: llama-server
 spec:
   type: ClusterIP
-  # Forcing  IP to  None for  a Headless  Service may  cause an  error
-  # saying the field is immutable if the Service already exists:
-  clusterIP: "None"
   selector:
     component: llama-server
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: llama-frontend
-spec:
-  # Starting  from  v5.2 it  is  official  ---  you can  "scale"  your
-  # fronted. I think  ist was said that "sessions affinity"  is not an
-  # issue anymore. Let try if this works:
-  replicas: 2
-  selector:
-    matchLabels:
-      component: llama-frontend
-  template:
-    metadata:
-      labels:
-        component: llama-frontend
-    spec:
-      containers:
-        # docker run --name some-llama-web-apache-mysql -e
-        # DB_SERVER_HOST="some-mysql-server" -e MYSQL_USER="some-user"
-        # -e MYSQL_PASSWORD="some-password" -e
-        # ZBX_SERVER_HOST="some-llama-server" -e
-        # PHP_TZ="some-timezone" -d llama/llama-web-apache-mysql:tag
-      - name: llama-frontend
-        image: llama/llama-web-apache-mysql:centos-5.2.2
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8080
-        env:
-        - name: "PHP_TZ"
-          value: "Europe/Berlin"
-        - name: "ZBX_SERVER_HOST"
-          value: "llama-server"
-        - name: "DB_SERVER_HOST"
-          value: "llama-db"
-        - name: "DB_SERVER_PORT"
-          value: "3306"
-        - name: "MYSQL_USER"
-          value: "llama"
-        - name: "MYSQL_PASSWORD"
-          value: "llama"
-        - name: "MYSQL_DATABASE"
-          value: "llama"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: llama-frontend
-spec:
-  type: ClusterIP
-  # Should take cate of load balancing between all of the replicas:
-  selector:
-    component: llama-frontend
   ports:
   - port: 80
     targetPort: 8080
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: llama-db
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      component: llama-db
-  # Strategy  =  Recreate  instructs  Kubernetes to  not  use  rolling
-  # updates.  Rolling updates  will not work, as you  cannot have more
-  # than one  Pod running at a  time. The Recreate strategy  will stop
-  # the  first  pod  before  creating  a  new  one  with  the  updated
-  # configuration.
-  strategy:
-    type: Recreate
-  template:
-    metadata:
-      labels:
-        component: llama-db
-    spec:
-      # Volumes used by some or all containers of the Pod:
-      volumes:
-      - name: "llama-db"
-        persistentVolumeClaim:
-          claimName: "llama-db"
-      containers:
-        # docker run --name some-mysql -e
-        # MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:tag
-        #
-        # With  v8.0  it my  happen  thata  the older  clients  cannot
-        # connect  because of  the  changed default  by password  hash
-        # algo.  Use  v5.7.  The CentOS based  llama server container
-        # image brings an older mysqladmin and likely other tools.
-        #
-      - name: llama-db
-        image: mysql:5.7.30
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 3306
-        volumeMounts:
-        - mountPath: "/var/lib/mysql"
-          name: "llama-db"
-        env:
-        - name: "MYSQL_ROOT_PASSWORD"
-          value: "root"
-          # Let the Llama Startup Procedure create the DB, avoid
-          # collation issues:
-        # - name: "MYSQL_USER"
-        #   value: "llama"
-        # - name: "MYSQL_PASSWORD"
-        #   value: "llama"
-        # - name: "MYSQL_DATABASE"
-        #   value: "llama"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: llama-db
-spec:
-  type: ClusterIP
-  selector:
-    component: llama-db
-  ports:
-  - port: 3306
-    targetPort: 3306
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: llama-agent2
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      component: llama-agent2
-  template:
-    metadata:
-      labels:
-        component: llama-agent2
-    spec:
-      containers:
-      - name: llama-agent2
-        # docker run --name some-llama-agent -e
-        # ZBX_HOSTNAME="some-hostname" -e
-        # ZBX_SERVER_HOST="some-llama-server" -d
-        # llama/llama-agent2:tag
-        #
-        # FIXME: why cannot I make it work with real llama_agent2?
-        # Also where are v5.2 images?  See the issue
-        # https://github.com/llama/llama-docker/issues/758
-        #
-        image: llama/llama-agent:centos-5.2.2 # C-agent, not Go-agent!
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 10050
-        env:
-          # It is likely that "llama-server" will only resolve to the
-          # source IP of the Pod  if the Service named "llama-server"
-          # remains a Headless Server:
-        - name: "ZBX_SERVER_HOST"
-          value: "llama-server"
-          # Hm,  allowing from  "llama-server" will  not do  it.  The
-          # problem is the IP packets arrive from the SRC IP 10.42.0.1
-          # of  cni0 interface,  not from  the llama-server  Pod.  Is
-          # this  a kind  of  SNAT at  work?  FIXME:  this  is a  very
-          # permissive setting:
-        - name: "ZBX_PASSIVESERVERS"
-          value: "10.42.0.0/16"
-          # agent.hostname  =  system.hostname  by  default  which  is
-          # random in Kubernetes. Unless you set it here:
-        - name: "ZBX_HOSTNAME"
-          value: "llama-agent2"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: llama-agent2
-spec:
-  type: ClusterIP
-  selector:
-    component: llama-agent2
-  ports:
-  - port: 10050
-    targetPort: 10050
 ---
 #
 # We  assume here  that  *.localhost resolves  to  the local  machine.
@@ -276,24 +60,28 @@ spec:
 #
 #     http://llama.localhost
 #
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: llama
+  name: "llama-server"
 spec:
   rules:
-  - host: llama.localhost
+  - host: "llama-server.localhost"
     http:
       paths:
-      - backend:
-          serviceName: llama-frontend
-          servicePort: 80
+      - path: "/"
+        pathType: "Prefix"
+        backend:
+          service:
+            name: "llama-server"
+            port:
+              number: 80
 ---
 # https://github.com/rancher/local-path-provisioner
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: llama-db
+  name: llama-models
 spec:
   accessModes:
     - ReadWriteOnce
@@ -304,5 +92,5 @@ spec:
   # storageClassName: local-path
   resources:
     requests:
-      storage: 1Gi
+      storage: 4Gi
 ...
