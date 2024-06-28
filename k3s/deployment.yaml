@@ -15,6 +15,10 @@ spec:
       labels:
         component: llama-server
     spec:
+      volumes:
+      - name: "llama-models"
+        persistentVolumeClaim:
+          claimName: "llama-models"
       containers:
       - name: llama-server
         #  podman run --rm \
@@ -37,6 +41,9 @@ spec:
         args: ["-f", "/dev/null"]
         ports:
         - containerPort: 8080
+        volumeMounts:
+        - mountPath: "/models"
+          name: "llama-models"
         env:
         - name: "XXX"
           value: "yyy"
