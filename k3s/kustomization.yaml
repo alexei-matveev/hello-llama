@@ -1,5 +1,5 @@
 # kubectl apply -k .
-namespace: "hello-zabbix"
+namespace: "hello-llama"
 namePrefix: ""
 nameSuffix: ""
 resources:
