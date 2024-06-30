@@ -113,21 +113,13 @@ local values = {
                       '4096',  // parametrize?
                     ],
                     ports: [
-                      {
-                        containerPort: 8080,
-                      },
+                      { containerPort: 8080 },
                     ],
                     volumeMounts: [
-                      {
-                        mountPath: '/models',
-                        name: 'llama-models',
-                      },
+                      { mountPath: '/models', name: 'llama-models' },
                     ],
                     env: [
-                      {
-                        name: 'XXX',
-                        value: 'yyy',
-                      },
+                      { name: 'XXX', value: 'yyy' },
                     ],
                   },
                 ],
