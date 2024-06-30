@@ -82,10 +82,7 @@ local values = {
                       'cd /models && [ -f %s ] || curl -LO %s' % [values.model, values.modelUrl],
                     ],
                     volumeMounts: [
-                      {
-                        mountPath: '/models',
-                        name: 'llama-models',
-                      },
+                      { mountPath: '/models', name: 'llama-models' },
                     ],
                   },
                 ],
