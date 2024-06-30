@@ -88,6 +88,36 @@
             },
             "type": "ClusterIP"
          }
+      },
+      {
+         "apiVersion": "networking.k8s.io/v1",
+         "kind": "Ingress",
+         "metadata": {
+            "name": "llama-server"
+         },
+         "spec": {
+            "rules": [
+               {
+                  "host": "llama-server.localhost",
+                  "http": {
+                     "paths": [
+                        {
+                           "backend": {
+                              "service": {
+                                 "name": "llama-server",
+                                 "port": {
+                                    "number": 80
+                                 }
+                              }
+                           },
+                           "path": "/",
+                           "pathType": "Prefix"
+                        }
+                     ]
+                  }
+               }
+            ]
+         }
       }
    ],
    "kind": "List"
