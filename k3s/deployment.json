@@ -1,69 +1,75 @@
 {
-   "apiVersion": "apps/v1",
-   "kind": "Deployment",
-   "metadata": {
-      "name": "llama-server"
-   },
-   "spec": {
-      "replicas": 1,
-      "selector": {
-         "matchLabels": {
-            "component": "llama-server"
-         }
-      },
-      "template": {
+   "apiVersion": "v1",
+   "items": [
+      {
+         "apiVersion": "apps/v1",
+         "kind": "Deployment",
          "metadata": {
-            "labels": {
-               "component": "llama-server"
-            }
+            "name": "llama-server"
          },
          "spec": {
-            "containers": [
-               {
-                  "args": [
-                     "--model",
-                     "/models/Phi-3-mini-4k-instruct-q4.gguf",
-                     "--chat-template",
-                     "phi3",
-                     "--embeddings",
-                     "--no-mmap",
-                     "--host",
-                     "0.0.0.0",
-                     "--metrics",
-                     "--ctx-size",
-                     "2048"
-                  ],
-                  "env": [
+            "replicas": 1,
+            "selector": {
+               "matchLabels": {
+                  "component": "llama-server"
+               }
+            },
+            "template": {
+               "metadata": {
+                  "labels": {
+                     "component": "llama-server"
+                  }
+               },
+               "spec": {
+                  "containers": [
                      {
-                        "name": "XXX",
-                        "value": "yyy"
+                        "args": [
+                           "--model",
+                           "/models/Phi-3-mini-4k-instruct-q4.gguf",
+                           "--chat-template",
+                           "phi3",
+                           "--embeddings",
+                           "--no-mmap",
+                           "--host",
+                           "0.0.0.0",
+                           "--metrics",
+                           "--ctx-size",
+                           "2048"
+                        ],
+                        "env": [
+                           {
+                              "name": "XXX",
+                              "value": "yyy"
+                           }
+                        ],
+                        "image": "localhost/llama-cpp:latest",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "llama-server",
+                        "ports": [
+                           {
+                              "containerPort": 8080
+                           }
+                        ],
+                        "volumeMounts": [
+                           {
+                              "mountPath": "/models",
+                              "name": "llama-models"
+                           }
+                        ]
                      }
                   ],
-                  "image": "localhost/llama-cpp:latest",
-                  "imagePullPolicy": "IfNotPresent",
-                  "name": "llama-server",
-                  "ports": [
+                  "volumes": [
                      {
-                        "containerPort": 8080
-                     }
-                  ],
-                  "volumeMounts": [
-                     {
-                        "mountPath": "/models",
-                        "name": "llama-models"
+                        "name": "llama-models",
+                        "persistentVolumeClaim": {
+                           "claimName": "llama-models"
+                        }
                      }
                   ]
                }
-            ],
-            "volumes": [
-               {
-                  "name": "llama-models",
-                  "persistentVolumeClaim": {
-                     "claimName": "llama-models"
-                  }
-               }
-            ]
+            }
          }
       }
-   }
+   ],
+   "kind": "List"
 }
