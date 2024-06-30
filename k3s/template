@@ -8,6 +8,11 @@
 //     $ kubectl apply -k . --dry-run=server
 //     $ kubectl apply -k .
 //
+
+local values = {
+  image: 'localhost/llama-cpp:latest',
+};
+
 {
   'kustomization.yaml':
     {
@@ -53,13 +58,30 @@
                     },
                   },
                 ],
+                initContainers: [
+                  {
+                    name: 'init-model',
+                    image: values.image,
+                    imagePullPolicy: 'IfNotPresent',
+                    command: [
+                      'sh',
+                      '-c',
+                      'cd /models && [-f stories15M-q4_0.gguf] || curl -LO https://huggingface.co/ggml-org/models/resolve/main/tinyllamas/stories15M-q4_0.gguf',
+                    ],
+                    volumeMounts: [
+                      {
+                        mountPath: '/models',
+                        name: 'llama-models',
+                      },
+                    ],
+                  },
+                ],
                 containers: [
                   {
                     name: 'llama-server',
-                    image: 'localhost/llama-cpp:latest',
+                    image: values.image,
                     imagePullPolicy: 'IfNotPresent',
-                    // command: ["tail"]
-                    // args: ["-f", "/dev/null"]
+                    // command: ["tail", "-f", "/dev/null"]
                     args: [
                       '--model',
                       // "/models/stories15M-q4_0.gguf"

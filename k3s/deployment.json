@@ -58,6 +58,24 @@
                         ]
                      }
                   ],
+                  "initContainers": [
+                     {
+                        "command": [
+                           "sh",
+                           "-c",
+                           "cd /models && [-f stories15M-q4_0.gguf] || curl -LO https://huggingface.co/ggml-org/models/resolve/main/tinyllamas/stories15M-q4_0.gguf"
+                        ],
+                        "image": "localhost/llama-cpp:latest",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "init-model",
+                        "volumeMounts": [
+                           {
+                              "mountPath": "/models",
+                              "name": "llama-models"
+                           }
+                        ]
+                     }
+                  ],
                   "volumes": [
                      {
                         "name": "llama-models",
