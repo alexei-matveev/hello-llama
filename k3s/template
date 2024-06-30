@@ -65,13 +65,17 @@ local values = {
                     },
                   },
                 ],
+
+                // Ugly hack with string templates to get the model
+                // file, if missing. In k3s permissions appear to
+                // suffice to write to /models volume. This is likely
+                // to change in OCP. Should we checksum the file
+                // instead of checkin for existence?
                 initContainers: [
                   {
                     name: 'init-model',
                     image: values.image,
                     imagePullPolicy: 'IfNotPresent',
-                    // Ugly hack with string templates to get the
-                    // model file:
                     command: [
                       'sh',
                       '-c',
