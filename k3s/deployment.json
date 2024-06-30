@@ -63,7 +63,7 @@
                         "command": [
                            "sh",
                            "-c",
-                           "cd /models && [-f stories15M-q4_0.gguf] || curl -LO https://huggingface.co/ggml-org/models/resolve/main/tinyllamas/stories15M-q4_0.gguf"
+                           "cd /models && [ -f Phi-3-mini-4k-instruct-q4.gguf ] || curl -LO https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf"
                         ],
                         "image": "localhost/llama-cpp:latest",
                         "imagePullPolicy": "IfNotPresent",
