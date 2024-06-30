@@ -25,7 +25,9 @@
                      {
                         "args": [
                            "--model",
-                           "/models/Phi-3-mini-4k-instruct-q4.gguf",
+                           "/models/phi-3-mini-4k-instruct-q4.gguf",
+                           "--alias",
+                           "phi-3-mini-4k-instruct-q4",
                            "--chat-template",
                            "phi3",
                            "--embeddings",
@@ -63,7 +65,7 @@
                         "command": [
                            "sh",
                            "-c",
-                           "cd /models && [ -f Phi-3-mini-4k-instruct-q4.gguf ] || curl -LO https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf"
+                           "cd /models && [ -f phi-3-mini-4k-instruct-q4.gguf ] || curl -LO https://huggingface.co/microsoft/phi-3-mini-4k-instruct-gguf/resolve/main/phi-3-mini-4k-instruct-q4.gguf"
                         ],
                         "image": "localhost/llama-cpp:latest",
                         "imagePullPolicy": "IfNotPresent",
@@ -116,7 +118,7 @@
          "spec": {
             "rules": [
                {
-                  "host": "llama-server.localhost",
+                  "host": "phi-3-mini-4k-instruct-q4.localhost",
                   "http": {
                      "paths": [
                         {

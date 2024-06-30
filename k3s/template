@@ -14,12 +14,16 @@ local values = {
 
   // In Jsonnet >= 0.19 there is std.splitLimitR(). Was it worth it?
   model: std.reverse(std.split(self.modelUrl, '/'))[0],
-  modelUrl: 'https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf',
+  modelUrl: 'https://huggingface.co/microsoft/phi-3-mini-4k-instruct-gguf/resolve/main/phi-3-mini-4k-instruct-q4.gguf',
+  modelAlias: std.strReplace(self.model, '.gguf', ''),
 
   // We assume here that *.localhost resolves to the local machine.
   // Following URL should be directed to corresponding Service, also
-  // with https:// protocoll: http://llama.localhost
-  host: 'llama-server.localhost',
+  // with https:// protocoll. Example URLs:
+  //
+  //     $ curl -s http://phi-3-mini-4k-instruct-q4.localhost/v1/models | jq
+  //
+  host: self.modelAlias + '.localhost',
 };
 
 {
@@ -101,6 +105,8 @@ local values = {
                     args: [
                       '--model',
                       '/models/' + values.model,
+                      '--alias',
+                      values.modelAlias,
                       '--chat-template',
                       'phi3',  // parametrize?
                       '--embeddings',
