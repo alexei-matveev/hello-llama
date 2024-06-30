@@ -26,6 +26,178 @@ local values = {
   host: self.modelAlias + '.localhost',
 };
 
+
+local llamaObjects = [
+  {
+    apiVersion: 'apps/v1',
+    kind: 'Deployment',
+    metadata: {
+      name: 'llama-server',
+    },
+    spec: {
+      replicas: 1,
+      selector: {
+        matchLabels: {
+          component: 'llama-server',
+        },
+      },
+      template: {
+        metadata: {
+          labels: {
+            component: 'llama-server',
+          },
+        },
+        spec: {
+          volumes: [
+            {
+              name: 'llama-models',
+              persistentVolumeClaim: {
+                claimName: 'llama-models',
+              },
+            },
+          ],
+
+          // Ugly hack with string templates to get the model
+          // file, if missing. In k3s permissions appear to
+          // suffice to write to /models volume. This is likely
+          // to change in OCP. Should we checksum the file
+          // instead of checkin for existence?
+          initContainers: [
+            {
+              name: 'init-model',
+              image: values.image,
+              imagePullPolicy: 'IfNotPresent',
+              command: [
+                'sh',
+                '-c',
+                'cd /models && [ -f %s ] || curl -LO %s' % [values.model, values.modelUrl],
+              ],
+              volumeMounts: [
+                { mountPath: '/models', name: 'llama-models' },
+              ],
+            },
+          ],
+
+          // The command line ist not generic, see context size
+          // and caht template that actually depend on the
+          // model.
+          containers: [
+            {
+              name: 'llama-server',
+              image: values.image,
+              imagePullPolicy: 'IfNotPresent',
+              // command: ["tail", "-f", "/dev/null"]
+              args: [
+                '--model',
+                '/models/' + values.model,
+                '--alias',
+                values.modelAlias,
+                '--chat-template',
+                'phi3',  // parametrize?
+                '--embeddings',
+                '--no-mmap',
+                '--host',
+                '0.0.0.0',
+                '--metrics',
+                '--ctx-size',
+                '4096',  // parametrize?
+              ],
+              ports: [
+                { containerPort: 8080 },
+              ],
+              volumeMounts: [
+                { mountPath: '/models', name: 'llama-models' },
+              ],
+              env: [
+                { name: 'XXX', value: 'yyy' },
+              ],
+            },
+          ],
+        },
+      },
+    },
+  },
+
+  {
+    apiVersion: 'v1',
+    kind: 'Service',
+    metadata: {
+      name: 'llama-server',
+    },
+    spec: {
+      type: 'ClusterIP',
+      selector: {
+        component: 'llama-server',
+      },
+      ports: [
+        {
+          port: 80,
+          targetPort: 8080,
+        },
+      ],
+    },
+  },
+
+  // Kind = Ingress:
+  {
+    apiVersion: 'networking.k8s.io/v1',
+    kind: 'Ingress',
+    metadata: {
+      name: 'llama-server',
+    },
+    spec: {
+      rules: [
+        {
+          host: values.host,
+          http: {
+            paths: [
+              {
+                path: '/',
+                pathType: 'Prefix',
+                backend: {
+                  service: {
+                    name: 'llama-server',
+                    port: {
+                      number: 80,
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  },
+
+  {
+    // https://github.com/rancher/local-path-provisioner
+    apiVersion: 'v1',
+    kind: 'PersistentVolumeClaim',
+    metadata: {
+      name: 'llama-models',
+    },
+    spec: {
+      accessModes: [
+        'ReadWriteOnce',
+        // When you  dont specify  storage class at  all the  default storage
+        // class may be chosen. In k3s with local-path provisioner it is also
+        // the  default one.  Omitted  storageClassName is  not  the same  as
+        // storageClassName = "".
+        // storageClassName: local-path
+      ],
+      resources: {
+        requests: {
+          storage: '4Gi',
+        },
+      },
+    },
+  },
+
+];
+
+
+// Template output with filenames as keys:
 {
   'kustomization.yaml':
     {
@@ -42,174 +214,7 @@ local values = {
     {
       apiVersion: 'v1',
       kind: 'List',
-      items: [
-        {
-          apiVersion: 'apps/v1',
-          kind: 'Deployment',
-          metadata: {
-            name: 'llama-server',
-          },
-          spec: {
-            replicas: 1,
-            selector: {
-              matchLabels: {
-                component: 'llama-server',
-              },
-            },
-            template: {
-              metadata: {
-                labels: {
-                  component: 'llama-server',
-                },
-              },
-              spec: {
-                volumes: [
-                  {
-                    name: 'llama-models',
-                    persistentVolumeClaim: {
-                      claimName: 'llama-models',
-                    },
-                  },
-                ],
-
-                // Ugly hack with string templates to get the model
-                // file, if missing. In k3s permissions appear to
-                // suffice to write to /models volume. This is likely
-                // to change in OCP. Should we checksum the file
-                // instead of checkin for existence?
-                initContainers: [
-                  {
-                    name: 'init-model',
-                    image: values.image,
-                    imagePullPolicy: 'IfNotPresent',
-                    command: [
-                      'sh',
-                      '-c',
-                      'cd /models && [ -f %s ] || curl -LO %s' % [values.model, values.modelUrl],
-                    ],
-                    volumeMounts: [
-                      { mountPath: '/models', name: 'llama-models' },
-                    ],
-                  },
-                ],
-
-                // The command line ist not generic, see context size
-                // and caht template that actually depend on the
-                // model.
-                containers: [
-                  {
-                    name: 'llama-server',
-                    image: values.image,
-                    imagePullPolicy: 'IfNotPresent',
-                    // command: ["tail", "-f", "/dev/null"]
-                    args: [
-                      '--model',
-                      '/models/' + values.model,
-                      '--alias',
-                      values.modelAlias,
-                      '--chat-template',
-                      'phi3',  // parametrize?
-                      '--embeddings',
-                      '--no-mmap',
-                      '--host',
-                      '0.0.0.0',
-                      '--metrics',
-                      '--ctx-size',
-                      '4096',  // parametrize?
-                    ],
-                    ports: [
-                      { containerPort: 8080 },
-                    ],
-                    volumeMounts: [
-                      { mountPath: '/models', name: 'llama-models' },
-                    ],
-                    env: [
-                      { name: 'XXX', value: 'yyy' },
-                    ],
-                  },
-                ],
-              },
-            },
-          },
-        },
-
-        {
-          apiVersion: 'v1',
-          kind: 'Service',
-          metadata: {
-            name: 'llama-server',
-          },
-          spec: {
-            type: 'ClusterIP',
-            selector: {
-              component: 'llama-server',
-            },
-            ports: [
-              {
-                port: 80,
-                targetPort: 8080,
-              },
-            ],
-          },
-        },
-
-        // Kind = Ingress:
-        {
-          apiVersion: 'networking.k8s.io/v1',
-          kind: 'Ingress',
-          metadata: {
-            name: 'llama-server',
-          },
-          spec: {
-            rules: [
-              {
-                host: values.host,
-                http: {
-                  paths: [
-                    {
-                      path: '/',
-                      pathType: 'Prefix',
-                      backend: {
-                        service: {
-                          name: 'llama-server',
-                          port: {
-                            number: 80,
-                          },
-                        },
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-        },
-
-        {
-          // https://github.com/rancher/local-path-provisioner
-          apiVersion: 'v1',
-          kind: 'PersistentVolumeClaim',
-          metadata: {
-            name: 'llama-models',
-          },
-          spec: {
-            accessModes: [
-              'ReadWriteOnce',
-              // When you  dont specify  storage class at  all the  default storage
-              // class may be chosen. In k3s with local-path provisioner it is also
-              // the  default one.  Omitted  storageClassName is  not  the same  as
-              // storageClassName = "".
-              // storageClassName: local-path
-            ],
-            resources: {
-              requests: {
-                storage: '4Gi',
-              },
-            },
-          },
-        },
-
-      ],
+      items: llamaObjects,
     },
 
 }
