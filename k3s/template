@@ -29,8 +29,8 @@ local values = {
 
 local llamaObjects = [
   {
-    apiVersion: 'apps/v1',
     kind: 'Deployment',
+    apiVersion: 'apps/v1',
     metadata: {
       name: 'llama-server',
     },
@@ -196,6 +196,138 @@ local llamaObjects = [
 
 ];
 
+// Open WebUI as a frontend to OpenAI API of Llama Server.  See
+// documentation [1] and maybe the discussion [2]
+//
+// Navigate to Open WebUI, http://open-webui.localhost, and configure
+// OpenAI Endpoints, e.g. `http://llama-server/v1` with arbitrary API
+// key. See also `OPENAI_API_BASE_URLS` env var below. FWIW, it does
+// not look like the system prompt from the GUI has any effect on the
+// model replies.
+//
+// [1] https://docs.openwebui.com
+// [2] https://github.com/ggerganov/llama.cpp/discussions/7712
+local openWebUiObjects = [
+  {
+    kind: 'Deployment',
+    apiVersion: 'apps/v1',
+    metadata: {
+      name: 'open-webui',
+    },
+    spec: {
+      replicas: 1,
+      selector: {
+        matchLabels: {
+          component: 'open-webui',
+        },
+      },
+      template: {
+        metadata: {
+          labels: {
+            component: 'open-webui',
+          },
+        },
+        spec: {
+          volumes: [
+            {
+              name: 'open-webui-data',
+              persistentVolumeClaim: {
+                claimName: 'open-webui-data',
+              },
+            },
+          ],
+
+          containers: [
+            {
+              name: 'open-webui',
+              // Image is 3.6G as of 2024-06-30:
+              image: 'ghcr.io/open-webui/open-webui:main',
+              imagePullPolicy: 'IfNotPresent',
+              ports: [
+                { containerPort: 8080 },
+              ],
+              volumeMounts: [
+                { mountPath: '/app/backend/data', name: 'open-webui-data' },
+              ],
+
+              // There appears to be more than one API Endpoint
+              // possible. Both environment variables accept semicolon
+              // separated lists [1].
+              //
+              // [1] https://docs.openwebui.com/tutorial/openai
+              env: [
+                { name: 'OPENAI_API_BASE_URLS', value: 'http://llama-server/v1' },
+                { name: 'OPENAI_API_KEYS', value: 'secret-key' },
+              ],
+            },
+          ],
+        },
+      },
+    },
+  },
+
+  {
+    kind: 'Service',
+    apiVersion: 'v1',
+    metadata: {
+      name: 'open-webui',
+    },
+    spec: {
+      type: 'ClusterIP',
+      selector: {
+        component: 'open-webui',
+      },
+      ports: [
+        { port: 80, targetPort: 8080 },
+      ],
+    },
+  },
+
+  {
+    kind: 'Ingress',
+    apiVersion: 'networking.k8s.io/v1',
+    metadata: {
+      name: 'open-webui',
+    },
+    spec: {
+      rules: [
+        {
+          host: 'open-webui.localhost',
+          http: {
+            paths: [
+              {
+                path: '/',
+                pathType: 'Prefix',
+                backend: {
+                  service: {
+                    name: 'open-webui',
+                    port: { number: 80 },
+                  },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  },
+
+  {
+    kind: 'PersistentVolumeClaim',
+    apiVersion: 'v1',
+    metadata: {
+      name: 'open-webui-data',
+    },
+    spec: {
+      accessModes: ['ReadWriteOnce'],
+      resources: {
+        requests: { storage: '1Gi' },
+      },
+    },
+  },
+
+];
+
 
 // Template output with filenames as keys:
 {
@@ -214,7 +346,7 @@ local llamaObjects = [
     {
       apiVersion: 'v1',
       kind: 'List',
-      items: llamaObjects,
+      items: llamaObjects + openWebUiObjects,
     },
 
 }

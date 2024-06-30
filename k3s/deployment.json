@@ -155,6 +155,132 @@
                }
             }
          }
+      },
+      {
+         "apiVersion": "apps/v1",
+         "kind": "Deployment",
+         "metadata": {
+            "name": "open-webui"
+         },
+         "spec": {
+            "replicas": 1,
+            "selector": {
+               "matchLabels": {
+                  "component": "open-webui"
+               }
+            },
+            "template": {
+               "metadata": {
+                  "labels": {
+                     "component": "open-webui"
+                  }
+               },
+               "spec": {
+                  "containers": [
+                     {
+                        "env": [
+                           {
+                              "name": "OPENAI_API_BASE_URLS",
+                              "value": "http://llama-server/v1"
+                           },
+                           {
+                              "name": "OPENAI_API_KEYS",
+                              "value": "secret-key"
+                           }
+                        ],
+                        "image": "ghcr.io/open-webui/open-webui:main",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "open-webui",
+                        "ports": [
+                           {
+                              "containerPort": 8080
+                           }
+                        ],
+                        "volumeMounts": [
+                           {
+                              "mountPath": "/app/backend/data",
+                              "name": "open-webui-data"
+                           }
+                        ]
+                     }
+                  ],
+                  "volumes": [
+                     {
+                        "name": "open-webui-data",
+                        "persistentVolumeClaim": {
+                           "claimName": "open-webui-data"
+                        }
+                     }
+                  ]
+               }
+            }
+         }
+      },
+      {
+         "apiVersion": "v1",
+         "kind": "Service",
+         "metadata": {
+            "name": "open-webui"
+         },
+         "spec": {
+            "ports": [
+               {
+                  "port": 80,
+                  "targetPort": 8080
+               }
+            ],
+            "selector": {
+               "component": "open-webui"
+            },
+            "type": "ClusterIP"
+         }
+      },
+      {
+         "apiVersion": "networking.k8s.io/v1",
+         "kind": "Ingress",
+         "metadata": {
+            "name": "open-webui"
+         },
+         "spec": {
+            "rules": [
+               {
+                  "host": "open-webui.localhost",
+                  "http": {
+                     "paths": [
+                        {
+                           "backend": {
+                              "service": {
+                                 "name": "open-webui",
+                                 "port": {
+                                    "number": 80
+                                 }
+                              }
+                           },
+                           "path": "/",
+                           "pathType": "Prefix"
+                        }
+                     ]
+                  }
+               }
+            ]
+         }
+      },
+      {
+         "apiVersion": "v1",
+         "kind": "PersistentVolumeClaim",
+         "metadata": {
+            "name": "open-webui-data"
+         },
+         "spec": {
+            "accessModes": [
+               "ReadWriteOnce"
+            ],
+            "resources": {
+               "requests": {
+                  "storage": "1Gi"
+               }
+            }
+         }
       }
    ],
    "kind": "List"
