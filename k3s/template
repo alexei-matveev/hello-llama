@@ -89,6 +89,10 @@ local values = {
                     ],
                   },
                 ],
+
+                // The command line ist not generic, see context size
+                // and caht template that actually depend on the
+                // model.
                 containers: [
                   {
                     name: 'llama-server',
