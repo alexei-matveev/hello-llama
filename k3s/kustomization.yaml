@@ -1,8 +1,8 @@
-# kubectl create namespace hello-llama
-# kubectl apply -k . --dry-run=server
-# kubectl apply -k .
-namespace: "hello-llama"
-namePrefix: ""
-nameSuffix: ""
-resources:
-  - "deployment.yaml"
+{
+   "namePrefix": "",
+   "nameSuffix": "",
+   "namespace": "hello-llama",
+   "resources": [
+      "deployment.yaml"
+   ]
+}

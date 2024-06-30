@@ -1,0 +1,24 @@
+#!/usr/bin/env jsonnet
+# -*- mode: jsonnet -*-
+
+// Usage:
+//
+//     $ ./template -m .
+//     $ kubectl create namespace hello-llama
+//     $ kubectl apply -k . --dry-run=server
+//     $ kubectl apply -k .
+//
+{
+  'kustomization.yaml':
+    {
+      // kubectl create namespace hello-llama
+      // kubectl apply -k . --dry-run=server
+      // kubectl apply -k .
+      namespace: 'hello-llama',
+      namePrefix: '',
+      nameSuffix: '',
+      resources: [
+        'deployment.yaml',
+      ],
+    },
+}
