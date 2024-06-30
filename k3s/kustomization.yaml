@@ -3,6 +3,7 @@
    "nameSuffix": "",
    "namespace": "hello-llama",
    "resources": [
+      "deployment.json",
       "deployment.yaml"
    ]
 }

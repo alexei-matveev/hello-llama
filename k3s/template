@@ -1,5 +1,5 @@
 #!/usr/bin/env jsonnet
-# -*- mode: jsonnet -*-
+// -*- mode: jsonnet -*-
 
 // Usage:
 //
@@ -18,7 +18,86 @@
       namePrefix: '',
       nameSuffix: '',
       resources: [
+        'deployment.json',
         'deployment.yaml',
       ],
+    },
+
+  // We should make Kind = List of it:
+  'deployment.json':
+    {
+      //
+      // kubectl apply -k .
+      //
+      apiVersion: 'apps/v1',
+      kind: 'Deployment',
+      metadata: {
+        name: 'llama-server',
+      },
+      spec: {
+        replicas: 1,
+        selector: {
+          matchLabels: {
+            component: 'llama-server',
+          },
+        },
+        template: {
+          metadata: {
+            labels: {
+              component: 'llama-server',
+            },
+          },
+          spec: {
+            volumes: [
+              {
+                name: 'llama-models',
+                persistentVolumeClaim: {
+                  claimName: 'llama-models',
+                },
+              },
+            ],
+            containers: [
+              {
+                name: 'llama-server',
+                image: 'localhost/llama-cpp:latest',
+                imagePullPolicy: 'IfNotPresent',
+                // command: ["tail"]
+                // args: ["-f", "/dev/null"]
+                args: [
+                  '--model',
+                  // "/models/stories15M-q4_0.gguf"
+                  '/models/Phi-3-mini-4k-instruct-q4.gguf',
+                  '--chat-template',
+                  'phi3',
+                  '--embeddings',
+                  '--no-mmap',
+                  '--host',
+                  '0.0.0.0',
+                  '--metrics',
+                  '--ctx-size',
+                  '2048',
+                ],
+                ports: [
+                  {
+                    containerPort: 8080,
+                  },
+                ],
+                volumeMounts: [
+                  {
+                    mountPath: '/models',
+                    name: 'llama-models',
+                  },
+                ],
+                env: [
+                  {
+                    name: 'XXX',
+                    value: 'yyy',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
     },
 }
