@@ -99,14 +99,14 @@ local values = {
                       '--model',
                       '/models/' + values.model,
                       '--chat-template',
-                      'phi3',
+                      'phi3',  // parametrize?
                       '--embeddings',
                       '--no-mmap',
                       '--host',
                       '0.0.0.0',
                       '--metrics',
                       '--ctx-size',
-                      '2048',
+                      '4096',  // parametrize?
                     ],
                     ports: [
                       {
