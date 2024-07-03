@@ -12,10 +12,11 @@
 local values = {
   image: 'localhost/llama-cpp:b3278',
 
-  // In Jsonnet >= 0.19 there is std.splitLimitR(). Was it worth it?
-  model: std.reverse(std.split(self.modelUrl, '/'))[0],
   modelUrl: 'https://huggingface.co/microsoft/phi-3-mini-4k-instruct-gguf/resolve/main/phi-3-mini-4k-instruct-q4.gguf',
-  modelAlias: std.strReplace(self.model, '.gguf', ''),
+
+  // In Jsonnet >= 0.19 there is std.splitLimitR(). Was it worth it?
+  modelFile: std.reverse(std.split(self.modelUrl, '/'))[0],
+  modelAlias: std.strReplace(self.modelFile, '.gguf', ''),
 
   // We assume here that *.localhost resolves to the local machine.
   // Following URL should be directed to corresponding Service, also
@@ -70,7 +71,7 @@ local llamaObjects = [
               command: [
                 'sh',
                 '-c',
-                'cd /models && [ -f %s ] || curl -LO %s' % [values.model, values.modelUrl],
+                'cd /models && [ -f %s ] || curl -LO %s' % [values.modelFile, values.modelUrl],
               ],
               volumeMounts: [
                 { mountPath: '/models', name: 'llama-models' },
@@ -89,7 +90,7 @@ local llamaObjects = [
               // command: ["tail", "-f", "/dev/null"]
               args: [
                 '--model',
-                '/models/' + values.model,
+                '/models/' + values.modelFile,
                 '--alias',
                 values.modelAlias,
                 '--chat-template',
