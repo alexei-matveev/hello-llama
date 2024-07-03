@@ -1,18 +1,20 @@
 #
 # Usage:
 #
-#     $ buildah bud --layers -t llama-cpp .
+#     $ tag=b3278
+#     $ image=localhost/llama-cpp:$tag
+#     $ buildah bud --layers --build-arg TAG=$tag -t $image .
 #     $ buildah images
-#     $ podman run --rm --entrypoint /llama-cli    localhost/llama-cpp -h
-#     $ podman run --rm --entrypoint /llama-server localhost/llama-cpp -h
+#     $ podman run --rm --entrypoint /llama-cli    $image -h
+#     $ podman run --rm --entrypoint /llama-server $image -h
 #
 # With populated models/ run inference:
 #
-#     $ podman run --rm -v $PWD/models:/models --entrypoint /main localhost/llama-cpp -m models/ggml-model-q4_0.gguf --prompt "Once upon a time"
+#     $ podman run --rm -v $PWD/models:/models --entrypoint /main $image -m models/ggml-model-q4_0.gguf --prompt "Once upon a time"
 #
 # or the API server:
 #
-#     $ podman run --rm -p 8080:8080 -v $PWD/models:/models localhost/llama-cpp -m models/ggml-model-q4_0.gguf -c 2048 --host 0.0.0.0
+#     $ podman run --rm -p 8080:8080 -v $PWD/models:/models $image -m models/ggml-model-q4_0.gguf -c 2048 --host 0.0.0.0
 #
 # Default  --host 127.0.0.1  ist  not sufficient  for  serving from  a
 # container.  See  original Dockerfiles  [1].  Für LLAMA  versions see
@@ -25,11 +27,12 @@
 
 ARG BASE_IMAGE=registry.access.redhat.com/ubi8:8.10 # ubi9:9.4
 #RG BASE_IMAGE=ubuntu:22.04
-ARG LLAMA_RELEASE=b3190
+ARG TAG=b3278                   # aka LLAMA_RELEASE
+    # b3190 (llama-cli, llama-server)
     # b3078 (main, server)
 
 FROM $BASE_IMAGE as build
-ARG LLAMA_RELEASE
+ARG TAG
 
 #UN apt-get update && apt-get install -y build-essential curl # git?
 RUN dnf install -y gcc gcc-c++ make diffutils # git?
@@ -47,7 +50,7 @@ WORKDIR /app
 #
 # COPY . .
 RUN mkdir llama.cpp && \
-    curl -sL https://github.com/ggerganov/llama.cpp/tarball/$LLAMA_RELEASE | tar zxf - -C llama.cpp/ --strip-components=1
+    curl -sL https://github.com/ggerganov/llama.cpp/tarball/$TAG | tar zxf - -C llama.cpp/ --strip-components=1
 RUN make -C llama.cpp -j$(nproc) llama-server llama-cli
 
 FROM $BASE_IMAGE as runtime
