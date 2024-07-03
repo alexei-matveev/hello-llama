@@ -1,7 +1,7 @@
 #
 # Usage:
 #
-#     $ tag=3190
+#     $ tag=b3190
 #     $ image=localhost/llama-cpp:$tag
 #     $ buildah bud --layers --build-arg TAG=$tag -t $image .
 #     $ buildah images
