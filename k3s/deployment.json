@@ -25,7 +25,7 @@
                      {
                         "args": [
                            "--model",
-                           "/models/phi-3-mini-4k-instruct-q4.gguf",
+                           "/models/Phi-3.1-mini-4k-instruct-Q4_K_M.gguf",
                            "--alias",
                            "phi-3-mini-4k-instruct-q4",
                            "--chat-template",
@@ -44,7 +44,7 @@
                               "value": "yyy"
                            }
                         ],
-                        "image": "localhost/llama-cpp:b3278",
+                        "image": "localhost/llama-cpp:latest",
                         "imagePullPolicy": "IfNotPresent",
                         "name": "llama-server",
                         "ports": [
@@ -65,9 +65,9 @@
                         "command": [
                            "sh",
                            "-c",
-                           "cd /models && [ -f phi-3-mini-4k-instruct-q4.gguf ] || curl -LO https://huggingface.co/microsoft/phi-3-mini-4k-instruct-gguf/resolve/main/phi-3-mini-4k-instruct-q4.gguf"
+                           "cd /models && [ -f Phi-3.1-mini-4k-instruct-Q4_K_M.gguf ] || curl -LO https://huggingface.co/bartowski/Phi-3.1-mini-4k-instruct-GGUF/resolve/main/Phi-3.1-mini-4k-instruct-Q4_K_M.gguf"
                         ],
-                        "image": "localhost/llama-cpp:b3278",
+                        "image": "localhost/llama-cpp:latest",
                         "imagePullPolicy": "IfNotPresent",
                         "name": "init-model",
                         "volumeMounts": [

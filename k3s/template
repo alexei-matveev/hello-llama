@@ -10,13 +10,19 @@
 //
 
 local values = {
-  image: 'localhost/llama-cpp:b3278',
+  image: 'localhost/llama-cpp:latest',
+  // Hm, llama_get_logits_ith: invalid logits id 56, reason: no logits
+  // image: 'localhost/llama-cpp:b3278',
 
-  modelUrl: 'https://huggingface.co/microsoft/phi-3-mini-4k-instruct-gguf/resolve/main/phi-3-mini-4k-instruct-q4.gguf',
+  // Huggingfase URLs appear to be case sensitive:
+  // modelUrl: 'https://huggingface.co/microsoft/phi-3-mini-4k-instruct-gguf/resolve/main/phi-3-mini-4k-instruct-q4.gguf',
+  modelUrl: 'https://huggingface.co/bartowski/Phi-3.1-mini-4k-instruct-GGUF/resolve/main/Phi-3.1-mini-4k-instruct-Q4_K_M.gguf',
 
-  // In Jsonnet >= 0.19 there is std.splitLimitR(). Was it worth it?
+  // In Jsonnet >= 0.19 there is std.splitLimitR() ...
   modelFile: std.reverse(std.split(self.modelUrl, '/'))[0],
-  modelAlias: std.strReplace(self.modelFile, '.gguf', ''),
+
+  // This is what one gets to see and choose in Open WebUI:
+  modelAlias: 'phi-3-mini-4k-instruct-q4',
 
   // We assume here that *.localhost resolves to the local machine.
   // Following URL should be directed to corresponding Service, also
@@ -24,6 +30,9 @@ local values = {
   //
   //     $ curl -s http://phi-3-mini-4k-instruct-q4.localhost/v1/models | jq
   //
+  // This ist what one needs to type into browser or as a part of the
+  // base URL. Dots separate domain subnames in DNS, underscores are
+  // not welcome either.
   host: self.modelAlias + '.localhost',
 };
 
