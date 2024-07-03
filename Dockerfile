@@ -1,7 +1,7 @@
 #
 # Usage:
 #
-#     $ tag=b3278
+#     $ tag=3190
 #     $ image=localhost/llama-cpp:$tag
 #     $ buildah bud --layers --build-arg TAG=$tag -t $image .
 #     $ buildah images
@@ -26,8 +26,9 @@
 # [3] https://catalog.redhat.com/search?searchType=containers
 
 ARG BASE_IMAGE=registry.access.redhat.com/ubi8:8.10 # ubi9:9.4
-#RG BASE_IMAGE=ubuntu:22.04
-ARG TAG=b3278                   # aka LLAMA_RELEASE
+# Llama release:
+ARG TAG=b3190
+    # b3278 (broken?)
     # b3190 (llama-cli, llama-server)
     # b3078 (main, server)
 
