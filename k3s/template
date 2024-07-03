@@ -10,7 +10,7 @@
 //
 
 local values = {
-  image: 'localhost/llama-cpp:latest',
+  image: 'localhost/llama-cpp:b3278',
 
   // In Jsonnet >= 0.19 there is std.splitLimitR(). Was it worth it?
   model: std.reverse(std.split(self.modelUrl, '/'))[0],

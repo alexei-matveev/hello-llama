@@ -44,7 +44,7 @@
                               "value": "yyy"
                            }
                         ],
-                        "image": "localhost/llama-cpp:latest",
+                        "image": "localhost/llama-cpp:b3278",
                         "imagePullPolicy": "IfNotPresent",
                         "name": "llama-server",
                         "ports": [
@@ -67,7 +67,7 @@
                            "-c",
                            "cd /models && [ -f phi-3-mini-4k-instruct-q4.gguf ] || curl -LO https://huggingface.co/microsoft/phi-3-mini-4k-instruct-gguf/resolve/main/phi-3-mini-4k-instruct-q4.gguf"
                         ],
-                        "image": "localhost/llama-cpp:latest",
+                        "image": "localhost/llama-cpp:b3278",
                         "imagePullPolicy": "IfNotPresent",
                         "name": "init-model",
                         "volumeMounts": [
